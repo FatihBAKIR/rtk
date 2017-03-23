@@ -18,6 +18,10 @@ namespace rtk
         GLFWwindow* wnd;
     public:
         window(resolution res, const std::string& title = std::string("rtk window"));
+
+        void begin_draw();
+        void end_draw();
+
         ~window();
     };
 }

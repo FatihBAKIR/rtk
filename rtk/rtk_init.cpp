@@ -4,6 +4,8 @@
 
 #include "rtk_init.hpp"
 #include <GLFW/glfw3.h>
+#include <glad/glad.h>
+#include <stdexcept>
 
 namespace rtk
 {
@@ -13,6 +15,7 @@ namespace rtk
         if (init_count == 0)
         {
             ::glfwInit();
+
         }
         ++init_count;
     }
