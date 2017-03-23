@@ -4,12 +4,12 @@
 
 namespace rtk
 {
-    class glfw_init
+    class rtk_init
     {
         static int init_count;
     public:
-        glfw_init();
-        ~glfw_init();
+        rtk_init();
+        ~rtk_init();
     };
 }
 

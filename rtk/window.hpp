@@ -8,6 +8,7 @@
 #include <rtk/rtk_fwd.hpp>
 #include <GLFW/glfw3.h>
 #include <rtk/display.hpp>
+#include <string>
 
 namespace rtk
 {
@@ -16,7 +17,7 @@ namespace rtk
     {
         GLFWwindow* wnd;
     public:
-        window(resolution res, const std::string& title = "rtk window");
+        window(resolution res, const std::string& title = std::string("rtk window"));
         ~window();
     };
 }
