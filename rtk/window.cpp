@@ -8,6 +8,7 @@
 #include <glad/glad.h>
 
 namespace {
+#if defined(RTK_DEBUG)
     void glad_post_handler(const char *name, void *funcptr, int len_args, ...)
     {
         GLenum error_code;
@@ -18,6 +19,7 @@ namespace {
             throw std::runtime_error("something broke (" + std::string(name) + ")");
         }
     }
+#endif
 }
 
 rtk::window::window(rtk::resolution res, const std::string &title) {
@@ -37,8 +39,9 @@ rtk::window::window(rtk::resolution res, const std::string &title) {
         {
             throw std::runtime_error("could not initialize glad");
         }
-
+#if defined(RTK_DEBUG)
         glad_set_post_callback(glad_post_handler);
+#endif
         return 1;
     }();
 

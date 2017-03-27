@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include <string>
 #include <glad/glad.h>
 #include <stdexcept>
 #include <gsl/gsl_assert>

@@ -2,7 +2,7 @@
 // Created by fatih on 23.03.2017.
 //
 
-#include <glad/include/glad/glad.h>
+#include <glad/glad.h>
 #include <rtk/gl/program.hpp>
 #include <rtk/geometry/mesh.hpp>
 

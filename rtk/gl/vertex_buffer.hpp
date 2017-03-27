@@ -10,5 +10,4 @@ class vertex_buffer {
 
 public:
 
-
 };

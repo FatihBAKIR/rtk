@@ -8,7 +8,8 @@
 #include <gsl/gsl>
 #include <glm/vec3.hpp>
 #include <boost/shared_array.hpp>
-#include <GL/gl.h>
+#include <glad/glad.h>
+#include <rtk/rtk_fwd.hpp>
 
 namespace rtk
 {
@@ -26,6 +27,8 @@ namespace geometry
         boost::shared_array<glm::vec3> vertices;
         boost::shared_array<glm::vec3> colors;
         boost::shared_array<std::uint32_t> faces;
+        boost::shared_array<glm::vec3> normals;
+        boost::shared_array<glm::vec3> uvs;
 
     public:
 
@@ -38,6 +41,14 @@ namespace geometry
         void load();
 
         void draw(gl::program& shader);
+
+        gsl::span<const glm::vec3> get_vertices() const
+        {
+            return {vertices.get(), (long)vertices_len};
+        }
+        gsl::span<const std::uint32_t> get_faces() const {
+            return {faces.get(), (long)faces_len};
+        }
     };
 }
 }

@@ -14,6 +14,7 @@ namespace gl
 {
 class program {
     GLuint id;
+
 public:
     program();
 

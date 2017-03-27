@@ -2,7 +2,7 @@
 
 out vec4 color;
 
-varying vec3 vert_color;
+in vec3 vert_color;
 
 void main()
 {
