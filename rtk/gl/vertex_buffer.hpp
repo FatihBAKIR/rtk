@@ -7,7 +7,5 @@
 
 class vertex_buffer {
     GLuint id;
-
 public:
-
 };

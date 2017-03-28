@@ -16,7 +16,7 @@ else()
     set(GLAD_FILES glad/src/glad.c glad/include/glad/glad.h glad/include/KHR/khrplatform.h)
 endif()
 
-set(SOURCE_FILES rtk/main.cpp rtk/window.cpp rtk/window.hpp rtk/rtk_init.cpp rtk/rtk_init.hpp rtk/display.cpp rtk/display.hpp rtk/graphics/units.hpp rtk/graphics/size.cpp rtk/graphics/size.hpp rtk/rtk_fwd.hpp rtk/geometry/mesh.cpp rtk/geometry/mesh.hpp rtk/gl/shader.cpp rtk/gl/shader.hpp rtk/gl/program.cpp rtk/gl/program.hpp rtk/gl/vertex_buffer.cpp rtk/gl/vertex_buffer.hpp rtk/asset/mesh_import.cpp rtk/asset/mesh_import.hpp)
+set(SOURCE_FILES rtk/main.cpp rtk/window.cpp rtk/window.hpp rtk/rtk_init.cpp rtk/rtk_init.hpp rtk/display.cpp rtk/display.hpp rtk/graphics/units.hpp rtk/graphics/size.cpp rtk/graphics/size.hpp rtk/rtk_fwd.hpp rtk/geometry/mesh.cpp rtk/geometry/mesh.hpp rtk/gl/shader.cpp rtk/gl/shader.hpp rtk/gl/program.cpp rtk/gl/program.hpp rtk/gl/vertex_buffer.cpp rtk/gl/vertex_buffer.hpp rtk/asset/mesh_import.cpp rtk/asset/mesh_import.hpp rtk/gl/mesh.cpp rtk/gl/mesh.hpp)
 add_executable(renderer ${SOURCE_FILES} ${GLAD_FILES})
 
 target_compile_definitions(renderer PRIVATE GLFW_INCLUDE_NONE=1)
