@@ -18,7 +18,7 @@ endif()
 
 set(SOURCE_FILES window.cpp window.hpp rtk_init.cpp rtk_init.hpp display.cpp display.hpp graphics/units.hpp
         graphics/size.hpp rtk_fwd.hpp geometry/mesh.cpp geometry/mesh.hpp gl/shader.hpp gl/program.cpp gl/program.hpp
-        gl/vertex_buffer.hpp asset/mesh_import.cpp asset/mesh_import.hpp)
+        gl/vertex_buffer.hpp asset/mesh_import.cpp asset/mesh_import.hpp gl/mesh.cpp gl/mesh.hpp)
 
 add_library(rtk STATIC ${SOURCE_FILES} ${GLAD_FILES})
 
@@ -32,6 +32,8 @@ if(CMAKE_BUILD_TYPE MATCHES "Debug")
 else()
     target_include_directories(rtk PUBLIC ../glad/include)
 endif()
+
+target_compile_definitions(rtk PRIVATE GLM_ENABLE_EXPERIMENTAL)
 
 target_include_directories(rtk PUBLIC ../3rd_party/gsl/include)
 target_include_directories(rtk PUBLIC ../3rd_party/glm/)

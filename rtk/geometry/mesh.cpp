@@ -5,63 +5,48 @@
 #include <glad/glad.h>
 #include <rtk/gl/program.hpp>
 #include <rtk/geometry/mesh.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtx/transform.hpp>
 
 namespace rtk
 {
 namespace geometry
 {
+    mesh::mesh() {
+        faces_len = 0;
+        vertices_len = 0;
+    }
+
     void mesh::set_vertices(gsl::span<const glm::vec3> vrts) {
         vertices_len = vrts.size();
         vertices = boost::shared_array<glm::vec3>(new glm::vec3[vertices_len]);
         std::copy(vrts.begin(), vrts.end(), vertices.get());
+
+        glm::vec3 min = vrts[0], max = vrts[0];
+        auto v = vertices.get();
+        for (auto i = vrts.begin(); i != vrts.end(); ++i, ++v)
+        {
+            *v = *i;
+            min = glm::min(min, *i);
+            max = glm::max(max, *i);
+        }
+
+        auto extent = max - min;
+        auto _min = std::min({extent.x, extent.y, extent.z});
+        auto _max = std::max({extent.x, extent.y, extent.z});
+
+        auto scale = glm::scale(glm::vec3(1.f) / glm::vec3(_max));
+
+        for (auto v = vertices.get(); v != vertices.get() + vertices_len; ++v)
+        {
+            *v = scale * glm::vec4(*v, 1.f);
+        }
     }
 
     void mesh::set_faces(gsl::span<const std::uint32_t> fcs) {
         faces_len = fcs.size();
         faces = boost::shared_array<std::uint32_t>(new std::uint32_t[faces_len]);
         std::copy(fcs.begin(), fcs.end(), faces.get());
-    }
-
-    mesh::mesh() {
-        faces_len = 0;
-        vertices_len = 0;
-    }
-
-    void mesh::load() {
-        glGenVertexArrays(1, &m_vao_id);
-        glGenBuffers(1, &m_pos_vbo_id);
-        glGenBuffers(1, &m_col_vbo_id);
-        glGenBuffers(1, &m_ebo_id);
-
-        glBindVertexArray(m_vao_id);
-
-            glBindBuffer(GL_ARRAY_BUFFER, m_pos_vbo_id);
-                glBufferData(GL_ARRAY_BUFFER, vertices_len * sizeof(*vertices.get()), vertices.get(), GL_STATIC_DRAW);
-
-                glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(*vertices.get()), (const void*)0);
-                glEnableVertexAttribArray(0);
-            glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-            if (colors)
-            {
-                glBindBuffer(GL_ARRAY_BUFFER, m_col_vbo_id);
-                    glBufferData(GL_ARRAY_BUFFER, vertices_len * sizeof(*colors.get()), colors.get(), GL_STATIC_DRAW);
-
-                    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(*colors.get()), (const void*)0);
-                    glEnableVertexAttribArray(1);
-                glBindBuffer(GL_ARRAY_BUFFER, 0);
-            }
-
-            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo_id);
-            glBufferData(GL_ELEMENT_ARRAY_BUFFER, faces_len * sizeof(*faces.get()), faces.get(), GL_STATIC_DRAW);
-
-        glBindVertexArray(0);
-    }
-
-    void mesh::draw(gl::program &shader) {
-        shader.use();
-        glBindVertexArray(m_vao_id);
-        glDrawElements(GL_TRIANGLES, faces_len, GL_UNSIGNED_INT, 0);
     }
 
     void mesh::set_colors(gsl::span<const glm::vec3> cols) {

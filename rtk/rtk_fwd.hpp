@@ -9,6 +9,11 @@ namespace rtk
     class display;
     class window;
 
+    namespace geometry
+    {
+        class mesh;
+    }
+
     namespace gl
     {
         struct vertex;
@@ -21,5 +26,6 @@ namespace rtk
         using fragment_shader = shader<fragment>;
 
         class program;
+        class mesh;
     }
 }
