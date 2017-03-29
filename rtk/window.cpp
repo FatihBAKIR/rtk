@@ -22,7 +22,9 @@ namespace {
 #endif
 }
 
-rtk::window::window(rtk::resolution res, const std::string &title) {
+namespace rtk
+{
+window::window(resolution res, const std::string &title) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -53,17 +55,24 @@ rtk::window::window(rtk::resolution res, const std::string &title) {
     glViewport(0, 0, width, height);
 }
 
-void rtk::window::begin_draw() {
+void window::begin_draw() {
     glfwPollEvents();
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
-void rtk::window::end_draw() {
+bool window::should_close() const
+{
+    return glfwWindowShouldClose(wnd);
+}
+
+void window::end_draw() {
     glfwSwapBuffers(wnd);
 }
 
-rtk::window::~window() {
+window::~window() {
     glfwDestroyWindow(wnd);
 }
+}
+

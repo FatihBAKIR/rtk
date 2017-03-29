@@ -4,6 +4,15 @@
 
 #include "program.hpp"
 #include <rtk/gl/shader.hpp>
+#include <fstream>
+
+namespace {
+	std::string read_text_file(const std::string& path)
+	{
+		std::ifstream f(path);
+		return {std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>()};
+	}
+}
 
 namespace rtk
 {
@@ -29,6 +38,13 @@ namespace gl
     void program::use() {
         glUseProgram(id);
     }
+
+	program load_shader(const std::string& name)
+	{
+		std::string shader_dir = (std::getenv("SHADER_PATH") ? std::getenv("SHADER_PATH") : "shaders");
+
+		
+	}
 }
 }
 

@@ -7,6 +7,7 @@
 
 #include <glad/glad.h>
 #include <rtk/rtk_fwd.hpp>
+#include <string>
 
 namespace rtk
 {
@@ -25,8 +26,9 @@ public:
 
     void use();
 };
-}
 
+program load_shader(const std::string& name);
+}
 }
 
 

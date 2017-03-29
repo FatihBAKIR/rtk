@@ -7,6 +7,7 @@
 #include <rtk/geometry/mesh.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
+#include <iostream>
 
 namespace rtk
 {
@@ -31,15 +32,17 @@ namespace geometry
             max = glm::max(max, *i);
         }
 
+        auto position = (max + min) * 0.5f;
         auto extent = max - min;
         auto _min = std::min({extent.x, extent.y, extent.z});
         auto _max = std::max({extent.x, extent.y, extent.z});
 
         auto scale = glm::scale(glm::vec3(1.f) / glm::vec3(_max));
 
+	std::cout << position.x << ", " << position.y << ", " << position.z << '\n';
         for (auto v = vertices.get(); v != vertices.get() + vertices_len; ++v)
         {
-            *v = scale * glm::vec4(*v, 1.f);
+            *v = scale * glm::vec4(*v - position, 1.f);
         }
     }
 

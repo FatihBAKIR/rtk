@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.6)
+cmake_minimum_required(VERSION 3.5)
 project(renderer)
 
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules/")
@@ -11,7 +11,9 @@ find_package(Boost REQUIRED COMPONENTS system)
 find_package(assimp REQUIRED)
 
 link_directories(rtk/bui)
-set(SOURCE_FILES tests/main.cpp glad_debug/src/glad.c)
+
+set(SOURCE_FILES tests/main.cpp glad/src/glad.c)
+set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
 add_executable(renderer ${SOURCE_FILES})
 
 target_compile_definitions(renderer PRIVATE GLFW_INCLUDE_NONE=1)
@@ -27,11 +29,11 @@ endif()
 target_include_directories(renderer PUBLIC ./3rd_party/gsl/include)
 target_include_directories(renderer PUBLIC ./3rd_party/glm/)
 
+target_link_libraries(renderer m dl rtk)
 target_link_libraries(renderer ${OPENGL_LIBRARIES})
 target_link_libraries(renderer ${GLFW_LIBRARIES})
 target_link_libraries(renderer ${Boost_LIBRARIES})
 target_link_libraries(renderer ${assimp_LIBRARIES})
-target_link_libraries(renderer m dl rtk)
 
 target_include_directories(renderer PUBLIC ${OPENGL_INCLUDE_DIR})
 target_include_directories(renderer PUBLIC ${GLFW_INCLUDE_DIR})

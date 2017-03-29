@@ -20,7 +20,6 @@ namespace geometry
         boost::shared_array<glm::vec3> vertices;
         boost::shared_array<glm::vec3> colors;
         boost::shared_array<std::uint32_t> faces;
-        boost::shared_array<glm::vec3> normals;
         boost::shared_array<glm::vec3> uvs;
 
     public:

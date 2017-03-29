@@ -22,6 +22,8 @@ namespace rtk
         void begin_draw();
         void end_draw();
 
+	bool should_close() const;
+
         ~window();
     };
 }

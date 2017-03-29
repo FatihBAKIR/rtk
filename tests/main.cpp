@@ -43,11 +43,8 @@ int main() {
     shader.attach(fs);
     shader.link();
 
-    rtk::gl::mesh_show("asd", m);
-    rtk::waitkey();
-
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    while (true)
+    while (!w.should_close())
     {
         w.begin_draw();
 

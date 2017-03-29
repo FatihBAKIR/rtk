@@ -4,6 +4,7 @@ project(rtk)
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../cmake_modules/")
 
 set(CMAKE_CXX_STANDARD 14)
+set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
 
 find_package(OpenGL REQUIRED)
 find_package(GLFW REQUIRED)
