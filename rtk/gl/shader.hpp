@@ -14,6 +14,8 @@ namespace rtk
 namespace gl
 {
 
+namespace shaders
+{
 struct fragment
 {
     static constexpr auto shader_type = GL_FRAGMENT_SHADER;
@@ -24,7 +26,13 @@ struct vertex
     static constexpr auto shader_type = GL_VERTEX_SHADER;
 };
 
-template <class ShaderT>
+struct geometry
+{
+    static constexpr auto shader_type = GL_GEOMETRY_SHADER;
+};
+}
+
+    template <class ShaderT>
 class shader {
     GLuint id;
 

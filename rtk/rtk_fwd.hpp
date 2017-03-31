@@ -12,20 +12,27 @@ namespace rtk
     namespace geometry
     {
         class mesh;
+        class path;
     }
 
     namespace gl
     {
-        struct vertex;
-        struct fragment;
+        namespace shaders
+        {
+            struct vertex;
+            struct fragment;
+            struct geometry;
+        }
 
         template <class>
         class shader;
 
-        using vertex_shader = shader<vertex>;
-        using fragment_shader = shader<fragment>;
+        using vertex_shader = shader<shaders::vertex>;
+        using fragment_shader = shader<shaders::fragment>;
+        using geometry_shader = shader<shaders::geometry>;
 
         class program;
         class mesh;
+        class path;
     }
 }

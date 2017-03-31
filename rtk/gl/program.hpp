@@ -21,6 +21,7 @@ public:
 
     void attach(const vertex_shader &);
     void attach(const fragment_shader &);
+    void attach(const geometry_shader &);
 
     void link();
 

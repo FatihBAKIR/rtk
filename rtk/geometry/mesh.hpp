@@ -18,7 +18,6 @@ namespace geometry
         std::size_t faces_len;
 
         boost::shared_array<glm::vec3> vertices;
-        boost::shared_array<glm::vec3> colors;
         boost::shared_array<std::uint32_t> faces;
         boost::shared_array<glm::vec3> uvs;
 
@@ -26,7 +25,6 @@ namespace geometry
         mesh();
 
         void set_vertices(gsl::span<const glm::vec3>);
-        void set_colors(gsl::span<const glm::vec3>);
         void set_faces(gsl::span<const std::uint32_t>);
 
         gsl::span<const glm::vec3> get_vertices() const {
@@ -35,10 +33,6 @@ namespace geometry
 
         gsl::span<const std::uint32_t> get_faces() const {
             return {faces.get(), (long)faces_len};
-        }
-
-        gsl::span<const glm::vec3> get_colors() const {
-            return {colors.get(), (long)vertices_len};
         }
     };
 }

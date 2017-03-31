@@ -12,8 +12,8 @@ find_package(assimp REQUIRED)
 
 link_directories(rtk/bui)
 
-set(SOURCE_FILES tests/main.cpp glad/src/glad.c)
-set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
+set(SOURCE_FILES tests/main.cpp)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_executable(renderer ${SOURCE_FILES})
 
 target_compile_definitions(renderer PRIVATE GLFW_INCLUDE_NONE=1)

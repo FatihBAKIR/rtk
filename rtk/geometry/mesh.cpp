@@ -8,6 +8,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <iostream>
+#include <glm/gtx/euler_angles.hpp>
 
 namespace rtk
 {
@@ -21,10 +22,11 @@ namespace geometry
     void mesh::set_vertices(gsl::span<const glm::vec3> vrts) {
         vertices_len = vrts.size();
         vertices = boost::shared_array<glm::vec3>(new glm::vec3[vertices_len]);
-        std::copy(vrts.begin(), vrts.end(), vertices.get());
 
+        std::cout << vertices_len << '\n';
         glm::vec3 min = vrts[0], max = vrts[0];
         auto v = vertices.get();
+
         for (auto i = vrts.begin(); i != vrts.end(); ++i, ++v)
         {
             *v = *i;
@@ -38,8 +40,9 @@ namespace geometry
         auto _max = std::max({extent.x, extent.y, extent.z});
 
         auto scale = glm::scale(glm::vec3(1.f) / glm::vec3(_max));
+        auto rot = glm::eulerAngleYXZ(0.f, glm::radians(270.f), glm::radians(30.f));
+        scale = rot * scale;
 
-	std::cout << position.x << ", " << position.y << ", " << position.z << '\n';
         for (auto v = vertices.get(); v != vertices.get() + vertices_len; ++v)
         {
             *v = scale * glm::vec4(*v - position, 1.f);
@@ -50,12 +53,6 @@ namespace geometry
         faces_len = fcs.size();
         faces = boost::shared_array<std::uint32_t>(new std::uint32_t[faces_len]);
         std::copy(fcs.begin(), fcs.end(), faces.get());
-    }
-
-    void mesh::set_colors(gsl::span<const glm::vec3> cols) {
-        Expects(cols.size() == vertices_len);
-        colors = boost::shared_array<glm::vec3>(new glm::vec3[vertices_len]);
-        std::copy(cols.begin(), cols.end(), colors.get());
     }
 }
 }

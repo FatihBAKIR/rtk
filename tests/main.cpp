@@ -5,11 +5,13 @@
 
 #include <rtk/gl/shader.hpp>
 #include <rtk/geometry/mesh.hpp>
+#include <rtk/geometry/path.hpp>
 #include <fstream>
 #include <rtk/gl/program.hpp>
 #include <thread>
 
 #include <rtk/asset/mesh_import.hpp>
+#include <rtk/gl/path.hpp>
 #include <rtk/gl/mesh.hpp>
 
 std::string read_text_file(const std::string& path)
@@ -38,20 +40,34 @@ int main() {
 
     rtk::gl::vertex_shader vs { read_text_file("../shaders/basic.vert").c_str() };
     rtk::gl::fragment_shader fs { read_text_file("../shaders/basic.frag").c_str() };
+    rtk::gl::geometry_shader gs { read_text_file("../shaders/line.geom").c_str() };
     rtk::gl::program shader;
     shader.attach(vs);
+    shader.attach(gs);
     shader.attach(fs);
     shader.link();
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    rtk::gl::program mesh_shader;
+    mesh_shader.attach(vs);
+    mesh_shader.attach(fs);
+    mesh_shader.link();
+
+    rtk::geometry::path p;
+    p.set_vertices(std::vector<glm::vec3>{ meshes[0].get_vertices()[0], meshes[0].get_vertices()[1], meshes[0].get_vertices()[2] });
+
+    rtk::gl::path gl_p (p);
+
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     while (!w.should_close())
     {
         w.begin_draw();
 
         for (auto& m : gl_meshes)
         {
-            m.draw(shader);
+            m.draw(mesh_shader);
         }
+
+        gl_p.draw(shader);
 
         w.end_draw();
         std::this_thread::sleep_for(10ms);

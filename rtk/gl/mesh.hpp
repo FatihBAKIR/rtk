@@ -6,28 +6,69 @@
 
 #include <glad/glad.h>
 #include <rtk/rtk_fwd.hpp>
+#include <map>
+#include <glm/vec3.hpp>
+#include <gsl/gsl>
 
-namespace rtk
-{
-namespace gl
-{
-class mesh {
-    GLuint m_vao_id = 0;
-    GLuint m_pos_vbo_id = 0;
-    GLuint m_col_vbo_id = 0;
-    GLuint m_ebo_id = 0;
+namespace rtk {
+    namespace gl {
+        template<class>
+        struct vb_traits;
 
-    long faces_len;
-    long verts_len;
+        template<>
+        struct vb_traits<glm::vec3>
+        {
+            static constexpr auto gl_type = GL_FLOAT;
+            static constexpr auto gl_cnt = 3;
+        };
 
-    void load(const geometry::mesh&);
+        template<>
+        struct vb_traits<float>
+        {
+            static constexpr auto gl_type = GL_FLOAT;
+            static constexpr auto gl_cnt = 1;
+        };
 
-public:
-    mesh(const geometry::mesh& geomesh);
-    ~mesh();
+        class mesh
+        {
+            GLuint m_vao_id = 0;
+            GLuint m_ebo_id = 0;
 
-    void draw(gl::program& shader);
-};
-}
+            std::map<GLuint, GLuint> vbos;
+
+            long faces_len;
+            long verts_len;
+
+            void load(const rtk::geometry::mesh&);
+
+        public:
+            mesh(const rtk::geometry::mesh& geomesh);
+
+            ~mesh();
+
+            template <class T>
+            void add_vertex_data(GLuint layout_id, gsl::span<const T>);
+
+            void draw(gl::program& shader);
+        };
+
+        template<class T>
+        void mesh::add_vertex_data(GLuint layout_id, gsl::span<const T> data)
+        {
+            using traits = vb_traits<T>;
+            glGenBuffers(1, &vbos[layout_id]);
+
+            glBindVertexArray(m_vao_id);
+
+            glBindBuffer(GL_ARRAY_BUFFER, vbos[layout_id]);
+            glBufferData(GL_ARRAY_BUFFER, data.size_bytes(), data.data(), GL_STATIC_DRAW);
+
+            glVertexAttribPointer(layout_id, traits::gl_cnt, traits::gl_type, GL_FALSE, sizeof(*data.data()),
+                    (const void*) 0);
+            glEnableVertexAttribArray(layout_id);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+            glBindVertexArray(0);
+        }
+    }
 }
 

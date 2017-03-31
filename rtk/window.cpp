@@ -51,6 +51,8 @@ window::window(resolution res, const std::string &title) {
 
     int width, height;
     glfwGetFramebufferSize(wnd, &width, &height);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
 
     glViewport(0, 0, width, height);
 }
@@ -59,7 +61,7 @@ void window::begin_draw() {
     glfwPollEvents();
 
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
 bool window::should_close() const
