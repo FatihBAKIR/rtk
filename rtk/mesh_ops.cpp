@@ -22,9 +22,9 @@ namespace geometry
         auto get_normal = [&](int id)
         {
             std::uint32_t v_ids[] = {
-                m.get_faces()[id],
-                m.get_faces()[id + 1],
-                m.get_faces()[id + 2]
+                m.get_faces()[id * 3],
+                m.get_faces()[id * 3 + 1],
+                m.get_faces()[id * 3 + 2]
             };
             glm::vec3 vecs[3];
             std::transform(std::begin(v_ids), std::end(v_ids), std::begin(vecs), [&](int v_id)

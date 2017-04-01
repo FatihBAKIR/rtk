@@ -40,7 +40,7 @@ namespace geometry
         auto _max = std::max({extent.x, extent.y, extent.z});
 
         auto scale = glm::scale(glm::vec3(1.f) / glm::vec3(_max));
-        auto rot = glm::eulerAngleYXZ(0.f, glm::radians(270.f), glm::radians(30.f));
+        auto rot = glm::eulerAngleYXZ(glm::radians(180.f), glm::radians(270.f), glm::radians(0.f));
         scale = rot * scale;
 
         for (auto v = vertices.get(); v != vertices.get() + vertices_len; ++v)

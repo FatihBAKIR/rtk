@@ -3,17 +3,6 @@
 layout (lines) in;
 layout (triangle_strip, max_vertices = 32) out;
 
-in VS_OUT {
-    vec3 color;
-    vec3 normal;
-} gs_in[];
-
-out VS_OUT
-{
-    vec3 color;
-    vec3 normal;
-} gs_out;
-
 vec3 createPerp(vec3 p1, vec3 p2)
 {
   vec3 invec = normalize(p2 - p1);
@@ -40,15 +29,13 @@ mat4 rotationMatrix(vec3 axis, float angle)
 
 void enlarge(vec3 p1, vec3 p2)
 {
-   gs_out.color = vec3(0.2, 0.5, 1);
-   gs_out.normal = gs_in[0].normal;
    vec3 axis = p2 - p1;
 
    vec3 perpx = createPerp(p1, p2);
-   int segs = 8;
+   int segs = 16;
 
    mat4 rotation = rotationMatrix(axis, 2 * 3.14159 / segs);
-   vec3 pos = perpx * 0.00375;
+   vec3 pos = perpx * 0.00575;
    for(int i=0; i<segs; i++) {
       gl_Position = vec4(p1 + pos, 1.0); EmitVertex();
       gl_Position = vec4(p2 + pos, 1.0); EmitVertex();
@@ -60,5 +47,4 @@ void enlarge(vec3 p1, vec3 p2)
 
 void main() {
     enlarge(gl_in[0].gl_Position.xyz, gl_in[1].gl_Position.xyz);
-
 }

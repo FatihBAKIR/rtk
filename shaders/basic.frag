@@ -9,6 +9,6 @@ in VS_OUT {
 
 void main()
 {
-    color = vec4((vec3(1.0) + fs_in.normal) * 0.5, 1.0f);
+    color = vec4(fs_in.color, 1.0f);
 }
 

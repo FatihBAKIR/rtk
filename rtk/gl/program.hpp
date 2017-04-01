@@ -8,6 +8,7 @@
 #include <glad/glad.h>
 #include <rtk/rtk_fwd.hpp>
 #include <string>
+#include <glm/fwd.hpp>
 
 namespace rtk
 {
@@ -22,6 +23,10 @@ public:
     void attach(const vertex_shader &);
     void attach(const fragment_shader &);
     void attach(const geometry_shader &);
+
+    void set_variable(const std::string& name, const glm::vec3&);
+    void set_variable(const std::string& name, int);
+    void set_variable(const std::string& name, float);
 
     void link();
 

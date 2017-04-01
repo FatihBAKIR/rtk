@@ -5,6 +5,7 @@
 #include "program.hpp"
 #include <rtk/gl/shader.hpp>
 #include <fstream>
+#include <glm/vec3.hpp>
 
 namespace {
 	std::string read_text_file(const std::string& path)
@@ -52,6 +53,27 @@ namespace gl
 
     void program::use() {
         glUseProgram(id);
+    }
+
+    void program::set_variable(const std::string& name, const glm::vec3& v)
+    {
+        use();
+        GLint lightPosLoc = glGetUniformLocation(id, name.c_str());
+        glUniform3f(lightPosLoc, v.x, v.y, v.z);
+    }
+
+    void program::set_variable(const std::string& name, int v)
+    {
+        use();
+        GLint loc = glGetUniformLocation(id, name.c_str());
+        glUniform1i(loc, v);
+    }
+
+    void program::set_variable(const std::string& name, float v)
+    {
+        use();
+        GLint loc = glGetUniformLocation(id, name.c_str());
+        glUniform1f(loc, v);
     }
 }
 }
