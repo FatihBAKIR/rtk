@@ -20,7 +20,8 @@ endif()
 set(SOURCE_FILES window.cpp window.hpp rtk_init.cpp rtk_init.hpp display.cpp display.hpp graphics/units.hpp
         graphics/size.hpp rtk_fwd.hpp geometry/mesh.cpp geometry/mesh.hpp gl/shader.hpp gl/program.cpp gl/program.hpp
         gl/vertex_buffer.hpp asset/mesh_import.cpp asset/mesh_import.hpp gl/mesh.cpp gl/mesh.hpp
-        geometry/path.cpp geometry/path.hpp gl/path.cpp gl/path.hpp mesh_ops.hpp mesh_ops.cpp)
+        geometry/path.cpp geometry/path.hpp gl/path.cpp gl/path.hpp mesh_ops.hpp mesh_ops.cpp
+        physics/aabb.hpp camera.cpp camera.hpp)
 
 add_library(rtk STATIC ${SOURCE_FILES} ${GLAD_FILES})
 

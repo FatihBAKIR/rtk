@@ -15,7 +15,6 @@ namespace rtk
         if (init_count == 0)
         {
             ::glfwInit();
-
         }
         ++init_count;
     }

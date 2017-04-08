@@ -6,6 +6,8 @@
 #include <rtk/gl/shader.hpp>
 #include <fstream>
 #include <glm/vec3.hpp>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 namespace {
 	std::string read_text_file(const std::string& path)
@@ -74,6 +76,13 @@ namespace gl
         use();
         GLint loc = glGetUniformLocation(id, name.c_str());
         glUniform1f(loc, v);
+    }
+
+    void program::set_variable(const std::string& name, const glm::mat4& v)
+    {
+        use();
+        GLint loc = glGetUniformLocation(id, name.c_str());
+        glUniformMatrix4fv(loc, 1, false, glm::value_ptr(v));
     }
 }
 }

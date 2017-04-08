@@ -14,6 +14,10 @@ vec3 createPerp(vec3 p1, vec3 p2)
   return ret;
 }
 
+uniform mat4 view;
+uniform mat4 projection;
+uniform mat4 model;
+
 mat4 rotationMatrix(vec3 axis, float angle)
 {
     axis = normalize(axis);
@@ -35,16 +39,16 @@ void enlarge(vec3 p1, vec3 p2)
    int segs = 16;
 
    mat4 rotation = rotationMatrix(axis, 2 * 3.14159 / segs);
-   vec3 pos = perpx * 0.00575;
+   vec3 pos = perpx * 0.005;
    for(int i=0; i<segs; i++) {
-      gl_Position = vec4(p1 + pos, 1.0); EmitVertex();
-      gl_Position = vec4(p2 + pos, 1.0); EmitVertex();
-      pos = vec3(vec4(pos, 0.0) * rotation);
+      gl_Position = projection * view * model * vec4(p1 + pos, 1.0); EmitVertex();
+      gl_Position = projection * view * model * vec4(p2 + pos, 1.0); EmitVertex();
+      pos = vec3(rotation * vec4(pos, 0.0));
    }
 
    EndPrimitive();
 }
 
 void main() {
-    enlarge(gl_in[0].gl_Position.xyz, gl_in[1].gl_Position.xyz);
+    enlarge(gl_in[0].gl_Position.xyz / gl_in[0].gl_Position.w, gl_in[1].gl_Position.xyz / gl_in[0].gl_Position.w);
 }

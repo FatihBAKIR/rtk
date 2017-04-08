@@ -9,12 +9,14 @@
 #include <glm/gtx/transform.hpp>
 #include <iostream>
 #include <glm/gtx/euler_angles.hpp>
+#include <rtk/physics/aabb.hpp>
 
 namespace rtk
 {
 namespace geometry
 {
-    mesh::mesh() {
+    mesh::mesh() : bbox({}, {})
+    {
         faces_len = 0;
         vertices_len = 0;
     }
@@ -34,10 +36,10 @@ namespace geometry
             max = glm::max(max, *i);
         }
 
-        auto position = (max + min) * 0.5f;
-        auto extent = max - min;
-        auto _min = std::min({extent.x, extent.y, extent.z});
-        auto _max = std::max({extent.x, extent.y, extent.z});
+        bbox = physics::from_min_max(min, max);
+
+        /*auto _min = std::min({bbox.extent.x, bbox.extent.y, bbox.extent.z});
+        auto _max = std::max({bbox.extent.x, bbox.extent.y, bbox.extent.z});
 
         auto scale = glm::scale(glm::vec3(1.f) / glm::vec3(_max));
         auto rot = glm::eulerAngleYXZ(glm::radians(180.f), glm::radians(270.f), glm::radians(0.f));
@@ -45,8 +47,8 @@ namespace geometry
 
         for (auto v = vertices.get(); v != vertices.get() + vertices_len; ++v)
         {
-            *v = scale * glm::vec4(*v - position, 1.f);
-        }
+            *v = scale * glm::vec4(*v - bbox.position, 1.f);
+        }*/
     }
 
     void mesh::set_faces(gsl::span<const std::uint32_t> fcs) {

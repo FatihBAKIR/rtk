@@ -8,6 +8,7 @@
 #include <glm/vec3.hpp>
 #include <boost/shared_array.hpp>
 #include <rtk/rtk_fwd.hpp>
+#include <rtk/physics/aabb.hpp>
 
 namespace rtk
 {
@@ -21,6 +22,7 @@ namespace geometry
         boost::shared_array<std::uint32_t> faces;
         boost::shared_array<glm::vec3> uvs;
 
+        physics::aabb bbox;
     public:
         mesh();
 
@@ -33,6 +35,11 @@ namespace geometry
 
         gsl::span<const std::uint32_t> get_faces() const {
             return {faces.get(), (long)faces_len};
+        }
+
+        physics::aabb get_bbox() const
+        {
+            return bbox;
         }
     };
 }

@@ -27,6 +27,7 @@ public:
     void set_variable(const std::string& name, const glm::vec3&);
     void set_variable(const std::string& name, int);
     void set_variable(const std::string& name, float);
+    void set_variable(const std::string& name, const glm::mat4&);
 
     void link();
 
