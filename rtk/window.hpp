@@ -20,7 +20,6 @@ namespace rtk {
 
     public:
         window(resolution res, const std::string& title = std::string("rtk window"));
-
         window(resolution res, const window& shared, const std::string& title = std::string("rtk window"));
 
         void begin_draw();

@@ -39,7 +39,7 @@ void enlarge(vec3 p1, vec3 p2)
    int segs = 16;
 
    mat4 rotation = rotationMatrix(axis, 2 * 3.14159 / segs);
-   vec3 pos = perpx * 0.005;
+   vec3 pos = perpx * 0.005 * 1;
    for(int i=0; i<segs; i++) {
       gl_Position = projection * view * model * vec4(p1 + pos, 1.0); EmitVertex();
       gl_Position = projection * view * model * vec4(p2 + pos, 1.0); EmitVertex();

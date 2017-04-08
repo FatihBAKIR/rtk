@@ -29,7 +29,7 @@ endif()
 target_include_directories(renderer PUBLIC ./3rd_party/gsl/include)
 target_include_directories(renderer PUBLIC ./3rd_party/glm/)
 
-target_link_libraries(renderer m dl rtk)
+target_link_libraries(renderer rtk m dl)
 target_link_libraries(renderer ${OPENGL_LIBRARIES})
 target_link_libraries(renderer ${GLFW_LIBRARIES})
 target_link_libraries(renderer ${Boost_LIBRARIES})

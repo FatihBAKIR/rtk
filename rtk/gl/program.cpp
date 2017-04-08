@@ -54,6 +54,7 @@ namespace gl
     }
 
     void program::use() {
+        assert(glIsProgram(id));
         glUseProgram(id);
     }
 

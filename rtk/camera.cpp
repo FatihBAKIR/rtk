@@ -71,5 +71,5 @@ void rtk::camera::ProcessKeyboard(rtk::Camera_Movement direction, GLfloat deltaT
 
 glm::mat4 rtk::camera::GetProjectionMatrix() const
 {
-    return glm::perspective(45.f, 800.f/600, 0.1f, 1000.f);
+    return glm::perspective(45.f, 800.f/600, 0.1f, 10000.f);
 }
