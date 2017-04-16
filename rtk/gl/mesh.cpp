@@ -32,6 +32,16 @@ namespace rtk {
             faces_len = face_span.size();
         }
 
+        mesh::mesh(mesh&& rhs)
+        {
+            m_vao_id = std::exchange(rhs.m_vao_id, 0);
+            m_ebo_id = std::exchange(rhs.m_ebo_id, 0);
+
+            vbos = std::move(rhs.vbos);
+            faces_len = rhs.faces_len;
+            verts_len = rhs.verts_len;
+        }
+
         void mesh::draw(gl::program &shader) {
             shader.use();
             glBindVertexArray(m_vao_id);
@@ -40,6 +50,8 @@ namespace rtk {
 
         mesh::~mesh()
         {
+            if (m_vao_id == 0) return;
+
             glDeleteBuffers(1, &m_ebo_id);
 
             for (const auto& vbo_id : vbos)
@@ -50,5 +62,20 @@ namespace rtk {
             glDeleteVertexArrays(1, &m_vao_id);
         }
 
+        void mesh::swap(mesh&& rhs)
+        {
+            using std::swap;
+            swap(m_vao_id, rhs.m_vao_id);
+            swap(m_ebo_id, rhs.m_ebo_id);
+            swap(vbos, rhs.vbos);
+            swap(faces_len, rhs.faces_len);
+            swap(verts_len, rhs.verts_len);
+        }
+
+        mesh& mesh::operator=(mesh rhs)
+        {
+            this->swap(std::move(rhs));
+            return *this;
+        }
     }
 }

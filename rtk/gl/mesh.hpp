@@ -12,22 +12,32 @@
 
 namespace rtk {
     namespace gl {
-        template<class>
-        struct vb_traits;
-
-        template<>
-        struct vb_traits<glm::vec3>
+        namespace detail
         {
-            static constexpr auto gl_type = GL_FLOAT;
-            static constexpr auto gl_cnt = 3;
-        };
+            template<class>
+            struct vb_traits;
 
-        template<>
-        struct vb_traits<float>
-        {
-            static constexpr auto gl_type = GL_FLOAT;
-            static constexpr auto gl_cnt = 1;
-        };
+            template<>
+            struct vb_traits<glm::vec3>
+            {
+                static constexpr auto gl_type = GL_FLOAT;
+                static constexpr auto gl_cnt = 3;
+            };
+
+            template<>
+            struct vb_traits<float>
+            {
+                static constexpr auto gl_type = GL_FLOAT;
+                static constexpr auto gl_cnt = 1;
+            };
+
+            template <>
+            struct vb_traits<int>
+            {
+                static constexpr auto gl_type = GL_INT;
+                static constexpr auto gl_cnt = 1;
+            };
+        }
 
         class mesh
         {
@@ -43,19 +53,28 @@ namespace rtk {
 
         public:
             mesh(const rtk::geometry::mesh& geomesh);
-
+            mesh(const mesh&) = delete;
+            mesh(mesh&& rhs);
             ~mesh();
+
+            mesh& operator=(mesh);
 
             template <class T>
             void add_vertex_data(GLuint layout_id, gsl::span<const T>);
 
             void draw(gl::program& shader);
+
+            void swap(mesh&& rhs);
+            friend void swap(mesh&& a, mesh&& b)
+            {
+                a.swap(std::move(b));
+            }
         };
 
         template<class T>
         void mesh::add_vertex_data(GLuint layout_id, gsl::span<const T> data)
         {
-            using traits = vb_traits<T>;
+            using traits = detail::vb_traits<T>;
             glGenBuffers(1, &vbos[layout_id]);
 
             glBindVertexArray(m_vao_id);

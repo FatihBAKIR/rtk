@@ -4,12 +4,13 @@ project(rtk)
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../cmake_modules/")
 
 set(CMAKE_CXX_STANDARD 14)
-set( CMAKE_EXPORT_COMPILE_COMMANDS ON )
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(OpenGL REQUIRED)
 find_package(GLFW REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system)
 find_package(assimp REQUIRED)
+find_package(GLM REQUIRED)
 
 if(CMAKE_BUILD_TYPE MATCHES "Debug")
     set(GLAD_FILES ../glad_debug/src/glad.c)
@@ -39,7 +40,7 @@ endif()
 target_compile_definitions(rtk PRIVATE GLM_ENABLE_EXPERIMENTAL)
 
 target_include_directories(rtk PUBLIC ../3rd_party/gsl/include)
-target_include_directories(rtk PUBLIC ../3rd_party/glm/)
+target_include_directories(rtk PUBLIC ${GLM_INCLUDE_DIRS})
 
 target_link_libraries(rtk ${OPENGL_LIBRARIES})
 target_link_libraries(rtk ${GLFW_LIBRARIES})

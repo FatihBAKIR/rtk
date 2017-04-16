@@ -33,8 +33,6 @@ public:
 
     void use();
 };
-
-program load_shader(const std::string& name);
 }
 }
 
