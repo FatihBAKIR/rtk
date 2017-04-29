@@ -6,6 +6,10 @@ find_library(RTK_LIBRARIES
         NAMES rtk
         PATHS /usr/local/lib /usr/lib "${RTK_ROOT}/build")
 
+find_path(GLAD_INCLUDE_DIR
+        NAMES glad/glad.h KHR/khrplatform.h
+        PATHS /usr/local/include /usr/include "${RTK_ROOT}")
+
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(RTK DEFAULT_MSG RTK_INCLUDE_DIR)
 if (RTK_FOUND)
@@ -26,6 +30,7 @@ if (RTK_FOUND)
     list(APPEND RTK_INCLUDE_DIRS "${assimp_INCLUDE_DIRS}")
     list(APPEND RTK_INCLUDE_DIRS "${BOOST_INCLUDE_DIRS}")
     list(APPEND RTK_INCLUDE_DIRS "${GLM_INCLUDE_DIRS}")
+    list(APPEND RTK_INCLUDE_DIRS "${GLAD_INCLUDE_DIRS}")
 
     list(APPEND RTK_LIBRARIES "${OPENGL_LIBRARIES}")
     list(APPEND RTK_LIBRARIES "${GLFW_LIBRARIES}")

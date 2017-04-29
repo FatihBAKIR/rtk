@@ -24,7 +24,7 @@ set(SOURCE_FILES window.cpp window.hpp rtk_init.cpp rtk_init.hpp display.cpp dis
         geometry/path.cpp geometry/path.hpp gl/path.cpp gl/path.hpp mesh_ops.hpp mesh_ops.cpp
         physics/aabb.hpp camera.cpp camera.hpp)
 
-add_library(rtk STATIC ${SOURCE_FILES} ${GLAD_FILES})
+add_library(rtk SHARED ${SOURCE_FILES} ${GLAD_FILES})
 
 target_compile_definitions(rtk PRIVATE GLFW_INCLUDE_NONE=1)
 
