@@ -42,7 +42,7 @@ namespace rtk {
             verts_len = rhs.verts_len;
         }
 
-        void mesh::draw(gl::program &shader) {
+        void mesh::draw(const gl::program &shader) {
             shader.use();
             glBindVertexArray(m_vao_id);
             glDrawElements(GL_TRIANGLES, faces_len, GL_UNSIGNED_INT, 0);

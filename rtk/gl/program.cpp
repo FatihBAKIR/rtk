@@ -53,7 +53,7 @@ namespace gl
         Ensures(glIsProgram(id));
     }
 
-    void program::use() {
+    void program::use() const {
         assert(glIsProgram(id));
         glUseProgram(id);
     }

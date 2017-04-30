@@ -31,7 +31,7 @@ public:
 
     void link();
 
-    void use();
+    void use() const;
 };
 }
 }

@@ -18,6 +18,13 @@ namespace rtk {
             struct vb_traits;
 
             template<>
+            struct vb_traits<glm::vec2>
+            {
+                static constexpr auto gl_type = GL_FLOAT;
+                static constexpr auto gl_cnt = 2;
+            };
+
+            template<>
             struct vb_traits<glm::vec3>
             {
                 static constexpr auto gl_type = GL_FLOAT;
@@ -62,7 +69,7 @@ namespace rtk {
             template <class T>
             void add_vertex_data(GLuint layout_id, gsl::span<const T>);
 
-            void draw(gl::program& shader);
+            void draw(const gl::program& shader);
 
             void swap(mesh&& rhs);
             friend void swap(mesh&& a, mesh&& b)
