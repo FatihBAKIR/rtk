@@ -79,4 +79,5 @@ fabric.properties
 
 cmake-build-debug/
 rtk/build/
+rtk/bui/
 .idea/
