@@ -23,7 +23,7 @@ namespace geometry
 
     void mesh::set_vertices(gsl::span<const glm::vec3> vrts) {
         vertices_len = vrts.size();
-        vertices = boost::shared_array<glm::vec3>(new glm::vec3[vertices_len]);
+        vertices = std::shared_ptr<glm::vec3>(new glm::vec3[vertices_len], [](auto* p){ delete[] p; });
 
         glm::vec3 min = vrts[0], max = vrts[0];
         auto v = vertices.get();
@@ -40,7 +40,7 @@ namespace geometry
 
     void mesh::set_faces(gsl::span<const std::uint32_t> fcs) {
         faces_len = fcs.size();
-        faces = boost::shared_array<std::uint32_t>(new std::uint32_t[faces_len]);
+        faces = std::shared_ptr<std::uint32_t>(new std::uint32_t[faces_len], [](auto* p) { delete[] p; });
         std::copy(fcs.begin(), fcs.end(), faces.get());
     }
 
@@ -61,34 +61,40 @@ namespace geometry
     mesh primitive::cube()
     {
         std::array<glm::vec3, 8> vs = {
-            glm::vec3{-.5f, -.5f, -.5f},
-            glm::vec3{.5f, -.5f, -.5f},
-            glm::vec3{.5f, -.5f, .5f},
-            glm::vec3{-.5f, -.5f, .5f},
-            glm::vec3{-.5f, .5f, -.5f},
-            glm::vec3{.5f, .5f, -.5f},
-            glm::vec3{.5f, .5f, .5f},
-            glm::vec3{-.5f, .5f, .5f},
+                glm::vec3{-.5f, -.5f, -.5f},
+                glm::vec3{.5f, -.5f, -.5f},
+                glm::vec3{.5f, -.5f, .5f},
+                glm::vec3{-.5f, -.5f, .5f},
+                glm::vec3{-.5f, .5f, -.5f},
+                glm::vec3{.5f, .5f, -.5f},
+                glm::vec3{.5f, .5f, .5f},
+                glm::vec3{-.5f, .5f, .5f},
         };
         std::array<uint32_t, 36> faces = {
-            0, 1, 2,
-            0, 2, 3,
-            0, 4, 1,
-            4, 5, 1,
-            1, 5, 2,
-            5, 6, 2,
-            6, 3, 2,
-            6, 7, 3,
-            4, 3, 7,
-            4, 0, 3,
-            5, 4, 7,
-            5, 7, 6
+                0, 1, 2,
+                0, 2, 3,
+                0, 4, 1,
+                4, 5, 1,
+                1, 5, 2,
+                5, 6, 2,
+                6, 3, 2,
+                6, 7, 3,
+                4, 3, 7,
+                4, 0, 3,
+                5, 4, 7,
+                5, 7, 6
         };
 
         mesh m;
         m.set_vertices(vs);
         m.set_faces(faces);
         return m;
+    }
+
+    void mesh::set_uvs(gsl::span<const glm::vec2> p_uvs)
+    {
+        uvs = std::shared_ptr<glm::vec2>(new glm::vec2[vertices_len], [](auto* p){ delete[] p; });
+        std::copy(p_uvs.begin(), p_uvs.end(), uvs.get());
     }
 }
 }

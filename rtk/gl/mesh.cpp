@@ -22,6 +22,11 @@ namespace rtk {
             glGenBuffers(1, &m_ebo_id);
 
             add_vertex_data(0, vert_span);
+            if (geom.has_uvs())
+            {
+                auto uv_span = geom.get_uvs();
+                add_vertex_data(2, uv_span);
+            }
 
             glBindVertexArray(m_vao_id);
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo_id);
