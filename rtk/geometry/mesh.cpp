@@ -23,7 +23,7 @@ namespace geometry
 
     void mesh::set_vertices(gsl::span<const glm::vec3> vrts) {
         vertices_len = vrts.size();
-        vertices = boost::shared_array<glm::vec3>(new glm::vec3[vertices_len]);
+        vertices = std::shared_ptr<glm::vec3>(new glm::vec3[vertices_len], [](auto* p){ delete[] p; });
 
         std::cout << vertices_len << '\n';
         glm::vec3 min = vrts[0], max = vrts[0];
@@ -53,8 +53,14 @@ namespace geometry
 
     void mesh::set_faces(gsl::span<const std::uint32_t> fcs) {
         faces_len = fcs.size();
-        faces = boost::shared_array<std::uint32_t>(new std::uint32_t[faces_len]);
+        faces = std::shared_ptr<std::uint32_t>(new std::uint32_t[faces_len], [](auto* p) { delete[] p; });
         std::copy(fcs.begin(), fcs.end(), faces.get());
+    }
+
+    void mesh::set_uvs(gsl::span<const glm::vec2> p_uvs)
+    {
+        uvs = std::shared_ptr<glm::vec2>(new glm::vec2[vertices_len], [](auto* p){ delete[] p; });
+        std::copy(p_uvs.begin(), p_uvs.end(), uvs.get());
     }
 }
 }

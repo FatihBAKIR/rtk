@@ -17,11 +17,13 @@ namespace rtk {
         {
             auto vert_span = geom.get_vertices();
             auto face_span = geom.get_faces();
+            auto uv_span = geom.get_uvs();
 
             glGenVertexArrays(1, &m_vao_id);
             glGenBuffers(1, &m_ebo_id);
 
             add_vertex_data(0, vert_span);
+            add_vertex_data(2, uv_span);
 
             glBindVertexArray(m_vao_id);
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo_id);

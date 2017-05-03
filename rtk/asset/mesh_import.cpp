@@ -24,6 +24,7 @@ namespace rtk {
             for (int i = 0; i<scene->mNumMeshes; ++i) {
                 auto mesh = scene->mMeshes[i];
                 std::vector<glm::vec3> pos;
+                std::vector<glm::vec2> uvs;
                 std::vector<std::uint32_t> faces;
 
                 for (unsigned int j = 0; j<mesh->mNumVertices; ++j) {
@@ -40,9 +41,18 @@ namespace rtk {
                     for (unsigned int k = 0; k<face.mNumIndices; ++k) { faces.push_back(face.mIndices[k]); }
                 }
 
+                for (unsigned int j = 0; j < mesh->mNumVertices; ++j)
+                {
+                    glm::vec2 uv;
+                    uv.x = mesh->mTextureCoords[0][j].x;
+                    uv.y = mesh->mTextureCoords[0][j].y;
+                    uvs.push_back(uv);
+                }
+
                 rtk::geometry::mesh m;
                 m.set_vertices(pos);
                 m.set_faces(faces);
+                m.set_uvs(uvs);
 
                 meshes.push_back(std::move(m));
             }

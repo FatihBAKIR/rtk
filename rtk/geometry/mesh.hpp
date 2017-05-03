@@ -18,9 +18,9 @@ namespace geometry
         std::size_t vertices_len;
         std::size_t faces_len;
 
-        boost::shared_array<glm::vec3> vertices;
-        boost::shared_array<std::uint32_t> faces;
-        boost::shared_array<glm::vec3> uvs;
+        std::shared_ptr<glm::vec3> vertices;
+        std::shared_ptr<glm::vec2> uvs;
+        std::shared_ptr<std::uint32_t> faces;
 
         physics::aabb bbox;
     public:
@@ -28,6 +28,7 @@ namespace geometry
 
         void set_vertices(gsl::span<const glm::vec3>);
         void set_faces(gsl::span<const std::uint32_t>);
+        void set_uvs(gsl::span<const glm::vec2>);
 
         gsl::span<const glm::vec3> get_vertices() const {
             return {vertices.get(), (long)vertices_len};
@@ -35,6 +36,11 @@ namespace geometry
 
         gsl::span<const std::uint32_t> get_faces() const {
             return {faces.get(), (long)faces_len};
+        }
+
+        gsl::span<const glm::vec2> get_uvs() const
+        {
+            return {uvs.get(), (long)vertices_len};
         }
 
         physics::aabb get_bbox() const
