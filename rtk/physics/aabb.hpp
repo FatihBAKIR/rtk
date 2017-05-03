@@ -50,5 +50,13 @@ namespace rtk
                 return merge(prev, elem.bounding_box());
             });
         }
+
+        inline bool inside(const aabb& box, const glm::vec3& point)
+        {
+            return
+                    box.min.x < point.x && box.max.x > point.x &&
+                    box.min.y < point.y && box.max.y > point.y &&
+                    box.min.z < point.z && box.max.z > point.z;
+        }
     }
 }

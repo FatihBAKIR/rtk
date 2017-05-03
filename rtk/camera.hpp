@@ -28,23 +28,14 @@ namespace rtk
     class camera
     {
         glm::vec3 Position;
-        glm::vec3 forward;
-        glm::vec3 Up;
-        glm::vec3 Right;
 
         glm::quat rotation;
-
-        GLfloat Yaw;
-        GLfloat Pitch;
 
         GLfloat MovementSpeed;
         GLfloat MouseSensitivity;
         GLfloat Zoom;
     public:
-        camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f),
-                glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
-                GLfloat yaw = YAW,
-                GLfloat pitch = PITCH);
+        camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f));
 
         glm::mat4 GetViewMatrix() const;
         glm::mat4 GetProjectionMatrix() const;
@@ -58,12 +49,14 @@ namespace rtk
         // Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
         void ProcessMouseScroll(GLfloat yoffset);
 
+        glm::vec3 get_forward() const;
+        glm::vec3 get_up() const;
+        glm::vec3 get_right() const;
+
         glm::vec3 get_position() const {
             return Position;
         }
 
     private:
-        // Calculates the front vector from the Camera's (updated) Eular Angles
-        void updateCameraVectors();
     };
 }

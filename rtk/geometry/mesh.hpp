@@ -37,11 +37,22 @@ namespace geometry
             return {faces.get(), (long)faces_len};
         }
 
+        gsl::span<glm::vec3> get_vertices()
+        {
+            return {vertices.get(), (long)vertices_len};
+        }
+
         physics::aabb get_bbox() const
         {
             return bbox;
         }
+        void recalculate();
     };
+
+    namespace primitive
+    {
+        mesh cube();
+    }
 }
 }
 

@@ -63,5 +63,14 @@ namespace geometry
         }
         return vert_normals;
     }
+
+    void transform(mesh& m, const glm::mat4& t)
+    {
+        for (auto& v : m.get_vertices())
+        {
+            v = glm::vec3(t * glm::vec4(v, 1.0f));
+        }
+        m.recalculate();
+    }
 }
 }

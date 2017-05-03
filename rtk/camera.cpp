@@ -6,32 +6,18 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-void rtk::camera::updateCameraVectors()
-{
-    rotation = glm::angleAxis(glm::radians(-Pitch), glm::vec3(1,0,0));
-    rotation *= glm::angleAxis(glm::radians(-Yaw), glm::vec3(0,1,0));
-    rotation = glm::normalize(rotation);
-
-    this->forward = glm::normalize(rotation * glm::vec3(0, 0, 1));
-    this->Up = glm::normalize(rotation * glm::vec3(0, 1, 0));
-    this->Right = glm::normalize(rotation * glm::vec3(-1, 0, 0));
-}
-
 glm::mat4 rtk::camera::GetViewMatrix() const
 {
-    return glm::lookAt(this->Position, this->Position + this->forward, this->Up);
+    return glm::lookAt(this->Position, this->Position + this->get_forward(), this->get_up());
 }
 
-rtk::camera::camera(glm::vec3 position, glm::vec3 up, GLfloat yaw, GLfloat pitch)
+rtk::camera::camera(glm::vec3 position)
         :
         MovementSpeed(SPEED),
         MouseSensitivity(SENSITIVTY),
         Zoom(ZOOM)
 {
     this->Position = position;
-    this->Yaw = yaw;
-    this->Pitch = pitch;
-    this->updateCameraVectors();
 }
 
 void rtk::camera::ProcessMouseMovement(GLfloat xoffset, GLfloat yoffset, GLboolean constrainPitch)
@@ -39,11 +25,13 @@ void rtk::camera::ProcessMouseMovement(GLfloat xoffset, GLfloat yoffset, GLboole
     xoffset *= this->MouseSensitivity;
     yoffset *= this->MouseSensitivity;
 
-    this->Yaw   += xoffset;
-    this->Pitch += yoffset;
+    auto yaw = glm::angleAxis(glm::radians(xoffset * MouseSensitivity), glm::vec3(0, 1, 0));
+    auto pitch = glm::angleAxis(glm::radians(yoffset * MouseSensitivity), glm::vec3(1, 0, 0));
 
-    // Update Front, Right and Up Vectors using the updated Eular angles
-    this->updateCameraVectors();
+    rotation = rotation * pitch; // self
+    rotation = yaw * rotation; // world
+
+    rotation = glm::normalize(rotation);
 }
 
 void rtk::camera::ProcessMouseScroll(GLfloat yoffset)
@@ -60,16 +48,31 @@ void rtk::camera::ProcessKeyboard(rtk::Camera_Movement direction, GLfloat deltaT
 {
     GLfloat velocity = this->MovementSpeed * deltaTime;
     if (direction == FORWARD)
-        this->Position += this->forward * velocity;
+        this->Position += get_forward() * velocity;
     if (direction == BACKWARD)
-        this->Position -= this->forward * velocity;
+        this->Position -= get_forward() * velocity;
     if (direction == LEFT)
-        this->Position -= this->Right * velocity;
+        this->Position += get_right() * velocity;
     if (direction == RIGHT)
-        this->Position += this->Right * velocity;
+        this->Position -= get_right() * velocity;
 }
 
 glm::mat4 rtk::camera::GetProjectionMatrix() const
 {
     return glm::perspective(45.f, 800.f/600, 0.1f, 10000.f);
+}
+
+glm::vec3 rtk::camera::get_right() const
+{
+    return rotation * glm::vec3(1, 0, 0);
+}
+
+glm::vec3 rtk::camera::get_forward() const
+{
+    return rotation * glm::vec3(0, 0, 1);
+}
+
+glm::vec3 rtk::camera::get_up() const
+{
+    return rotation * glm::vec3(0, 1, 0);
 }

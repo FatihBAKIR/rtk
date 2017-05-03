@@ -25,7 +25,6 @@ namespace geometry
         vertices_len = vrts.size();
         vertices = boost::shared_array<glm::vec3>(new glm::vec3[vertices_len]);
 
-        std::cout << vertices_len << '\n';
         glm::vec3 min = vrts[0], max = vrts[0];
         auto v = vertices.get();
 
@@ -37,24 +36,59 @@ namespace geometry
         }
 
         bbox = physics::from_min_max(min, max);
-
-        /*auto _min = std::min({bbox.extent.x, bbox.extent.y, bbox.extent.z});
-        auto _max = std::max({bbox.extent.x, bbox.extent.y, bbox.extent.z});
-
-        auto scale = glm::scale(glm::vec3(1.f) / glm::vec3(_max));
-        auto rot = glm::eulerAngleYXZ(glm::radians(180.f), glm::radians(270.f), glm::radians(0.f));
-        scale = rot * scale;
-
-        for (auto v = vertices.get(); v != vertices.get() + vertices_len; ++v)
-        {
-            *v = scale * glm::vec4(*v - bbox.position, 1.f);
-        }*/
     }
 
     void mesh::set_faces(gsl::span<const std::uint32_t> fcs) {
         faces_len = fcs.size();
         faces = boost::shared_array<std::uint32_t>(new std::uint32_t[faces_len]);
         std::copy(fcs.begin(), fcs.end(), faces.get());
+    }
+
+    void mesh::recalculate()
+    {
+        auto vrts = get_vertices();
+        glm::vec3 min = vrts[0], max = vrts[0];
+
+        for (auto i = vrts.begin(); i != vrts.end(); ++i)
+        {
+            min = glm::min(min, *i);
+            max = glm::max(max, *i);
+        }
+
+        bbox = physics::from_min_max(min, max);
+    }
+
+    mesh primitive::cube()
+    {
+        std::array<glm::vec3, 8> vs = {
+            glm::vec3{-.5f, -.5f, -.5f},
+            glm::vec3{.5f, -.5f, -.5f},
+            glm::vec3{.5f, -.5f, .5f},
+            glm::vec3{-.5f, -.5f, .5f},
+            glm::vec3{-.5f, .5f, -.5f},
+            glm::vec3{.5f, .5f, -.5f},
+            glm::vec3{.5f, .5f, .5f},
+            glm::vec3{-.5f, .5f, .5f},
+        };
+        std::array<uint32_t, 36> faces = {
+            0, 1, 2,
+            0, 2, 3,
+            0, 4, 1,
+            4, 5, 1,
+            1, 5, 2,
+            5, 6, 2,
+            6, 3, 2,
+            6, 7, 3,
+            4, 3, 7,
+            4, 0, 3,
+            5, 4, 7,
+            5, 7, 6
+        };
+
+        mesh m;
+        m.set_vertices(vs);
+        m.set_faces(faces);
+        return m;
     }
 }
 }
