@@ -16,7 +16,7 @@ namespace rtk {
 
     class window
     {
-        GLFWwindow* wnd;
+        GLFWwindow* m_wnd;
 
     public:
         window(resolution res, const std::string& title = std::string("rtk window"));
@@ -39,6 +39,8 @@ namespace rtk {
 
         bool should_close() const;
         ~window();
+
+        resolution get_resolution() const;
 
     private:
 

@@ -17,6 +17,14 @@ namespace rtk
                 width(w), height(h) {}
     };
 
+    template <class T>
+    struct point2d
+    {
+        T x, y;
+        point2d(const T& x, const T& y) :
+                x(x), y(y) {}
+    };
+
     using resolution = size<rtk::pixels>;
     using physical_size = size<rtk::millimeters>;
 }

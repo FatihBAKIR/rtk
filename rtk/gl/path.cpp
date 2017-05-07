@@ -2,7 +2,7 @@
 // Created by Mehmet Fatih BAKIR on 30/03/2017.
 //
 
-#include "path.hpp"
+#include <rtk/gl/path.hpp>
 #include <rtk/geometry/path.hpp>
 #include <rtk/gl/program.hpp>
 #include <iostream>

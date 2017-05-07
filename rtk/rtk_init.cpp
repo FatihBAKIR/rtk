@@ -2,7 +2,7 @@
 // Created by fatih on 19.03.2017.
 //
 
-#include "rtk_init.hpp"
+#include <rtk/rtk_init.hpp>
 #include <GLFW/glfw3.h>
 #include <glad/glad.h>
 #include <stdexcept>

@@ -2,7 +2,7 @@
 // Created by Mehmet Fatih BAKIR on 01/04/2017.
 //
 
-#include "camera.hpp"
+#include <rtk/camera.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
