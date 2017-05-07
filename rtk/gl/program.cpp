@@ -2,7 +2,7 @@
 // Created by fatih on 23.03.2017.
 //
 
-#include "program.hpp"
+#include <rtk/gl/program.hpp>
 #include <rtk/gl/shader.hpp>
 #include <fstream>
 #include <glm/vec3.hpp>

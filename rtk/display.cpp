@@ -2,7 +2,7 @@
 // Created by fatih on 19.03.2017.
 //
 
-#include "display.hpp"
+#include <rtk/display.hpp>
 #include <GLFW/glfw3.h>
 
 

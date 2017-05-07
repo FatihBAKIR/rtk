@@ -2,7 +2,7 @@
 // Created by fatih on 19.03.2017.
 //
 
-#include "window.hpp"
+#include <rtk/window.hpp>
 #include <rtk/display.hpp>
 #include <cassert>
 #include <glad/glad.h>
@@ -34,9 +34,9 @@ namespace rtk {
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-        wnd = glfwCreateWindow(res.width, res.height, title.c_str(), nullptr, nullptr);
+        m_wnd = glfwCreateWindow(res.width, res.height, title.c_str(), nullptr, nullptr);
 
-        glfwMakeContextCurrent(wnd);
+        glfwMakeContextCurrent(m_wnd);
         static auto init = [] {
             if (!gladLoadGL()) {
                 throw std::runtime_error("could not initialize glad");
@@ -47,10 +47,10 @@ namespace rtk {
             return 1;
         }();
 
-        assert(wnd);
+        assert(m_wnd);
 
         int width, height;
-        glfwGetFramebufferSize(wnd, &width, &height);
+        glfwGetFramebufferSize(m_wnd, &width, &height);
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS);
 
@@ -59,7 +59,7 @@ namespace rtk {
 
     void window::begin_draw()
     {
-        glfwMakeContextCurrent(wnd);
+        glfwMakeContextCurrent(m_wnd);
         glfwPollEvents();
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -68,17 +68,17 @@ namespace rtk {
 
     bool window::should_close() const
     {
-        return glfwWindowShouldClose(wnd);
+        return glfwWindowShouldClose(m_wnd);
     }
 
     void window::end_draw()
     {
-        glfwSwapBuffers(wnd);
+        glfwSwapBuffers(m_wnd);
     }
 
     window::~window()
     {
-        glfwDestroyWindow(wnd);
+        glfwDestroyWindow(m_wnd);
     }
 
     window::window(resolution res, const window& shared, const std::string& title)
@@ -91,9 +91,9 @@ namespace rtk {
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 
-        wnd = glfwCreateWindow(res.width, res.height, title.c_str(), nullptr, shared.wnd);
+        m_wnd = glfwCreateWindow(res.width, res.height, title.c_str(), nullptr, shared.m_wnd);
 
-        glfwMakeContextCurrent(wnd);
+        glfwMakeContextCurrent(m_wnd);
         static auto init = [] {
             if (!gladLoadGL()) {
                 throw std::runtime_error("could not initialize glad");
@@ -104,10 +104,10 @@ namespace rtk {
             return 1;
         }();
 
-        assert(wnd);
+        assert(m_wnd);
 
         int width, height;
-        glfwGetFramebufferSize(wnd, &width, &height);
+        glfwGetFramebufferSize(m_wnd, &width, &height);
         glEnable(GL_DEPTH_TEST);
         glDepthFunc(GL_LESS);
 
@@ -118,7 +118,7 @@ namespace rtk {
 
     void window::input_callbacks()
     {
-        ::glfwSetCursorPosCallback(wnd, [](GLFWwindow* w, double x, double y){
+        ::glfwSetCursorPosCallback(m_wnd, [](GLFWwindow* w, double x, double y){
 
         });
     }
@@ -130,29 +130,36 @@ namespace rtk {
 
     bool window::get_key_down(int key) const
     {
-        return glfwGetKey(wnd, key) == GLFW_PRESS;
+        return glfwGetKey(m_wnd, key) == GLFW_PRESS;
     }
 
     bool window::get_key(int key) const
     {
-        return glfwGetKey(wnd, key) == GLFW_REPEAT;
+        return glfwGetKey(m_wnd, key) == GLFW_REPEAT;
     }
 
     bool window::get_key_up(int key) const
     {
-        return glfwGetKey(wnd, key) == GLFW_RELEASE;
+        return glfwGetKey(m_wnd, key) == GLFW_RELEASE;
     }
 
     glm::vec2 window::get_mouse() const
     {
         double x, y;
-        glfwGetCursorPos(wnd, &x, &y);
+        glfwGetCursorPos(m_wnd, &x, &y);
         return {(float)x, (float)y};
     }
 
     void window::lock_cursor(bool lock)
     {
-        glfwSetInputMode(wnd, GLFW_CURSOR, lock ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+        glfwSetInputMode(m_wnd, GLFW_CURSOR, lock ? GLFW_CURSOR_DISABLED : GLFW_CURSOR_NORMAL);
+    }
+
+    resolution window::get_resolution() const
+    {
+        int w, h;
+        glfwGetWindowSize(m_wnd, &w, &h);
+        return { rtk::pixels(w), rtk::pixels(h) };
     }
 }
 
