@@ -42,6 +42,9 @@ namespace rtk {
 
         resolution get_resolution() const;
 
+        void use() const;
+        void set_vsync(bool on);
+
     private:
 
     };

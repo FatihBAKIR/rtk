@@ -43,6 +43,15 @@ namespace rtk
         }
 
         template <class IteratorT>
+        inline aabb from_points(IteratorT begin, const IteratorT& end)
+        {
+            return std::accumulate(std::next(begin), end, from_min_max(*begin, *begin), [](const aabb& prev, const auto& elem)
+            {
+                return merge(prev, from_min_max(elem, elem));
+            });
+        }
+
+        template <class IteratorT>
         inline aabb merge(IteratorT begin, IteratorT end)
         {
             return std::accumulate(std::next(begin), end, begin->bounding_box(), [](const aabb& prev, const auto& elem)

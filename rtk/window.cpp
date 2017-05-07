@@ -161,5 +161,16 @@ namespace rtk {
         glfwGetWindowSize(m_wnd, &w, &h);
         return { rtk::pixels(w), rtk::pixels(h) };
     }
+
+    void window::set_vsync(bool on)
+    {
+        use();
+        glfwSwapInterval(on ? 1 : 0);
+    }
+
+    void window::use() const
+    {
+        glfwMakeContextCurrent(m_wnd);
+    }
 }
 
