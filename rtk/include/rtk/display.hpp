@@ -9,7 +9,7 @@
 #include <rtk/graphics/size.hpp>
 #include <rtk/rtk_fwd.hpp>
 
-namespace rtk
+namespace RTK_NAMESPACE
 {
     class display {
         GLFWmonitor* opaque;

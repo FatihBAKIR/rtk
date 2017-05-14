@@ -10,7 +10,7 @@
 #include <glad/glad.h>
 #include <glm/gtc/quaternion.hpp>
 
-namespace rtk
+namespace RTK_NAMESPACE
 {
     enum Camera_Movement {
         FORWARD,

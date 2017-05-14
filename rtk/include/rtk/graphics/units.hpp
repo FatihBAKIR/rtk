@@ -7,7 +7,7 @@
 #include <cstddef>
 #include <boost/serialization/strong_typedef.hpp>
 
-namespace rtk {
+namespace RTK_NAMESPACE {
 
     BOOST_STRONG_TYPEDEF(std::size_t, pixels);
     BOOST_STRONG_TYPEDEF(std::size_t, millimeters);

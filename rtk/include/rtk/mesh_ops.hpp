@@ -8,7 +8,7 @@
 #include <vector>
 #include <rtk/rtk_fwd.hpp>
 
-namespace rtk
+namespace RTK_NAMESPACE
 {
 namespace geometry
 {

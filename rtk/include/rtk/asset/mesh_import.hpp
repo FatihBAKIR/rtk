@@ -5,7 +5,7 @@
 #include <rtk/geometry/mesh.hpp>
 #include <vector>
 
-namespace rtk
+namespace RTK_NAMESPACE
 {
 namespace assets
 {

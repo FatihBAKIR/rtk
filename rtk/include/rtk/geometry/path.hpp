@@ -8,7 +8,7 @@
 #include <gsl/span>
 #include <boost/shared_array.hpp>
 
-namespace rtk
+namespace RTK_NAMESPACE
 {
 namespace geometry
 {

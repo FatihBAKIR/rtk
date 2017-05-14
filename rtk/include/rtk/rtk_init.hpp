@@ -4,7 +4,7 @@
 
 #pragma once
 
-namespace rtk
+namespace RTK_NAMESPACE
 {
     class rtk_init
     {

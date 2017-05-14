@@ -10,7 +10,7 @@
 #include <rtk/rtk_fwd.hpp>
 #include <rtk/physics/aabb.hpp>
 
-namespace rtk
+namespace RTK_NAMESPACE
 {
 namespace geometry
 {

@@ -4,7 +4,7 @@
 
 #pragma once
 
-namespace rtk
+namespace RTK_NAMESPACE
 {
     class display;
     class window;
@@ -34,5 +34,8 @@ namespace rtk
         class program;
         class mesh;
         class path;
+
+        class texture2d;
+        class framebuffer;
     }
 }

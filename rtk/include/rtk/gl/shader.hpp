@@ -9,90 +9,87 @@
 #include <stdexcept>
 #include <gsl/gsl_assert>
 
-namespace rtk
-{
-namespace gl
-{
+namespace RTK_NAMESPACE {
+    namespace gl {
+        namespace shaders {
+            struct fragment
+            {
+                static constexpr auto shader_type = GL_FRAGMENT_SHADER;
+            };
 
-namespace shaders
-{
-struct fragment
-{
-    static constexpr auto shader_type = GL_FRAGMENT_SHADER;
-};
+            struct vertex
+            {
+                static constexpr auto shader_type = GL_VERTEX_SHADER;
+            };
 
-struct vertex
-{
-    static constexpr auto shader_type = GL_VERTEX_SHADER;
-};
-
-struct geometry
-{
-    static constexpr auto shader_type = GL_GEOMETRY_SHADER;
-};
-}
-
-    template <class ShaderT>
-class shader {
-    GLuint id;
-
-public:
-    shader() {
-        id = 0;
-    }
-
-    shader(const shader&) = delete;
-    shader(shader&& rhs)
-    {
-        id = rhs.id;
-        rhs.id = 0;
-    }
-
-    shader(const char* src)
-    {
-        id = 0;
-        load(src);
-    }
-
-    void load(const char* src)
-    {
-        if (id)
-        {
-            clear();
+            struct geometry
+            {
+                static constexpr auto shader_type = GL_GEOMETRY_SHADER;
+            };
         }
 
-        id = glCreateShader(ShaderT::shader_type);
-        glShaderSource(id, 1, &src, nullptr);
-        glCompileShader(id);
-
-        GLint status;
-        glGetShaderiv(id, GL_COMPILE_STATUS, &status);
-
-        if (status != GL_TRUE)
+        template<class ShaderT>
+        class shader
         {
-            char buffer[512];
-            glGetShaderInfoLog(id, 512, NULL, buffer);
+            GLuint id;
 
-            throw std::runtime_error(std::string("shader compile error: ") + buffer);
-        }
+        public:
+            shader()
+            {
+                id = 0;
+            }
 
-        Ensures(glIsShader(id));
+            shader(const shader&) = delete;
+
+            shader(shader&& rhs)
+            {
+                id = rhs.id;
+                rhs.id = 0;
+            }
+
+            shader(const char* src)
+            {
+                id = 0;
+                load(src);
+            }
+
+            void load(const char* src)
+            {
+                if (id) {
+                    clear();
+                }
+
+                id = glCreateShader(ShaderT::shader_type);
+                glShaderSource(id, 1, &src, nullptr);
+                glCompileShader(id);
+
+                GLint status;
+                glGetShaderiv(id, GL_COMPILE_STATUS, &status);
+
+                if (status!=GL_TRUE) {
+                    char buffer[512];
+                    glGetShaderInfoLog(id, 512, NULL, buffer);
+
+                    throw std::runtime_error(std::string("shader compile error: ")+buffer);
+                }
+
+                Ensures(glIsShader(id));
+            }
+
+            void clear()
+            {
+                glDeleteShader(id);
+            }
+
+            GLuint get_id() const
+            {
+                return id;
+            }
+
+            ~shader()
+            {
+                clear();
+            }
+        };
     }
-
-    void clear()
-    {
-        glDeleteShader(id);
-    }
-
-    GLuint get_id() const
-    {
-        return id;
-    }
-
-    ~shader()
-    {
-        clear();
-    }
-};
-}
 }

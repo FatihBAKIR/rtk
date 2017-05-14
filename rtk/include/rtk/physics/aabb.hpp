@@ -8,7 +8,7 @@
 #include <ostream>
 #include <numeric>
 
-namespace rtk
+namespace RTK_NAMESPACE
 {
     namespace physics
     {

@@ -10,7 +10,7 @@
 #include <string>
 #include <glm/fwd.hpp>
 
-namespace rtk
+namespace RTK_NAMESPACE
 {
 namespace gl
 {
