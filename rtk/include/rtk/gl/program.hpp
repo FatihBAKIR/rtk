@@ -14,7 +14,7 @@ namespace RTK_NAMESPACE
 {
 namespace gl
 {
-class program {
+class RTK_PUBLIC program {
     GLuint id;
 
 public:

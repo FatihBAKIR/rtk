@@ -11,12 +11,10 @@
 
 namespace rtk {
     namespace assets {
-        std::vector<geometry::mesh> load_meshes(const std::string& file)
+        static std::vector<geometry::mesh> load_meshes(const aiScene* scene)
         {
-            Assimp::Importer importer;
-            auto scene = importer.ReadFile(file, aiProcess_JoinIdenticalVertices);
             if ((!scene) || (scene->mFlags==AI_SCENE_FLAGS_INCOMPLETE) || (!scene->mRootNode)) {
-                throw std::runtime_error("error loading "+file+" :"+std::string(importer.GetErrorString()));
+                throw std::runtime_error("couldn't load scene");
             }
 
             std::vector<rtk::geometry::mesh> meshes;
@@ -61,6 +59,20 @@ namespace rtk {
             }
 
             return meshes;
+        }
+
+        std::vector<geometry::mesh> load_meshes(const std::string& file)
+        {
+            Assimp::Importer importer;
+            auto scene = importer.ReadFile(file, aiProcess_JoinIdenticalVertices);
+            return load_meshes(scene);
+        }
+
+        std::vector<geometry::mesh> load_meshes(const char* file_contents, size_t sz)
+        {
+            Assimp::Importer importer;
+            auto scene = importer.ReadFileFromMemory(file_contents, sz, aiProcess_JoinIdenticalVertices);
+            return load_meshes(scene);
         }
     }
 }

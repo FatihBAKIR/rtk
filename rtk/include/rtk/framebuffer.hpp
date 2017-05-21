@@ -11,7 +11,7 @@ namespace RTK_NAMESPACE
 {
 namespace gl
 {
-    class framebuffer
+    class RTK_PUBLIC framebuffer
     {
     public:
         explicit framebuffer(const rtk::gl::texture2d&);
@@ -28,7 +28,7 @@ namespace gl
         GLuint m_fb_id;
     };
 
-    void reset_framebuffer();
+    RTK_PUBLIC void reset_framebuffer();
 }
 }
 

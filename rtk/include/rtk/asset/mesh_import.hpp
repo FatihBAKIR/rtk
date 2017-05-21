@@ -9,6 +9,7 @@ namespace RTK_NAMESPACE
 {
 namespace assets
 {
-    std::vector<geometry::mesh> load_meshes(const std::string& file);
+    RTK_PUBLIC std::vector<geometry::mesh> load_meshes(const std::string& file);
+    RTK_PUBLIC std::vector<geometry::mesh> load_meshes(const char* file_contents, size_t sz);
 }
 }

@@ -31,14 +31,10 @@ namespace RTK_NAMESPACE {
         template<class ShaderT>
         class shader
         {
-            GLuint id;
+            GLuint id = 0;
 
         public:
-            shader()
-            {
-                id = 0;
-            }
-
+            shader() = default;
             shader(const shader&) = delete;
 
             shader(shader&& rhs)

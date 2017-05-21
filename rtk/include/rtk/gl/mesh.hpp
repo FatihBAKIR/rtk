@@ -46,7 +46,7 @@ namespace RTK_NAMESPACE {
             };
         }
 
-        class mesh
+        class RTK_PUBLIC mesh
         {
             GLuint m_vao_id = 0;
             GLuint m_ebo_id = 0;

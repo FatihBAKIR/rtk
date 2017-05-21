@@ -4,6 +4,9 @@
 
 #pragma once
 
+#define RTK_PUBLIC __attribute__((visibility("default")))
+#define RTK_PRIVATE __attribute__((visibility("hidden")))
+
 namespace RTK_NAMESPACE
 {
     class display;
@@ -13,6 +16,12 @@ namespace RTK_NAMESPACE
     {
         class mesh;
         class path;
+    }
+
+    namespace graphics
+    {
+        struct unsafe_texture;
+        class texture2d;
     }
 
     namespace gl

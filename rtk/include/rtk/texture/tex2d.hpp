@@ -5,6 +5,7 @@
 #ifndef MALT_TEX2D_HPP
 #define MALT_TEX2D_HPP
 
+#include <rtk/rtk_fwd.hpp>
 #include <glm/vec3.hpp>
 #include <glad/glad.h>
 #include <gsl/span>
@@ -47,7 +48,7 @@ namespace RTK_NAMESPACE {
         template <> struct get_format<channel_type::integer, 8, 3> { static constexpr auto value = pixel_format::rgb_byte; };
         template <> struct get_format<channel_type::integer, 8, 4> { static constexpr auto value = pixel_format::rgba_byte; };
 
-        struct unsafe_texture
+        struct RTK_PUBLIC unsafe_texture
         {
             /*
              * stores the raw texture data for this texture
@@ -58,7 +59,7 @@ namespace RTK_NAMESPACE {
             pixel_format m_fmt;
         };
 
-        class texture2d
+        class RTK_PUBLIC texture2d
                 : public unsafe_texture
         {
             bool m_owns_data;
@@ -91,7 +92,7 @@ namespace RTK_NAMESPACE {
         template <class elem_type, int channel_count>
         struct texture_traits;
 
-        class texture2d
+        class RTK_PUBLIC texture2d
         {
             uint16_t m_width, m_height;
             GLuint m_texture_id;
@@ -114,7 +115,7 @@ namespace RTK_NAMESPACE {
             rtk::resolution get_resolution() const;
         };
 
-        texture2d create_texture(rtk::resolution, graphics::pixel_format);
+        RTK_PUBLIC texture2d create_texture(rtk::resolution, graphics::pixel_format);
     }
 }
 
