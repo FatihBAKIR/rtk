@@ -4,10 +4,10 @@
 
 #include <rtk/asset/mesh_import.hpp>
 
-#include <cimport.h>
-#include <postprocess.h>
-#include <Importer.hpp>
-#include <scene.h>
+#include <assimp/cimport.h>
+#include <assimp/postprocess.h>
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
 
 namespace rtk {
     namespace assets {
