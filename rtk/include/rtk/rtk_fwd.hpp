@@ -4,7 +4,10 @@
 
 #pragma once
 
-namespace rtk
+#define RTK_PUBLIC __attribute__((visibility("default")))
+#define RTK_PRIVATE __attribute__((visibility("hidden")))
+
+namespace RTK_NAMESPACE
 {
     class display;
     class window;
@@ -13,6 +16,12 @@ namespace rtk
     {
         class mesh;
         class path;
+    }
+
+    namespace graphics
+    {
+        struct unsafe_texture;
+        class texture2d;
     }
 
     namespace gl
@@ -34,5 +43,8 @@ namespace rtk
         class program;
         class mesh;
         class path;
+
+        class texture2d;
+        class framebuffer;
     }
 }

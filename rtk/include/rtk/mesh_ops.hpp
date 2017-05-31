@@ -8,12 +8,12 @@
 #include <vector>
 #include <rtk/rtk_fwd.hpp>
 
-namespace rtk
+namespace RTK_NAMESPACE
 {
 namespace geometry
 {
-    std::vector<glm::vec3> generate_normals(const mesh&);
-    void transform(mesh&, const glm::mat4&);
+    RTK_PUBLIC std::vector<glm::vec3> generate_normals(const mesh&);
+    RTK_PUBLIC void transform(mesh&, const glm::mat4&);
 }
 }
 

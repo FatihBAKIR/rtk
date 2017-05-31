@@ -10,7 +10,7 @@
 #include <glm/vec3.hpp>
 #include <gsl/gsl>
 
-namespace rtk {
+namespace RTK_NAMESPACE {
     namespace gl {
         namespace detail
         {
@@ -46,7 +46,7 @@ namespace rtk {
             };
         }
 
-        class mesh
+        class RTK_PUBLIC mesh
         {
             GLuint m_vao_id = 0;
             GLuint m_ebo_id = 0;
@@ -56,10 +56,10 @@ namespace rtk {
             long faces_len;
             long verts_len;
 
-            void load(const rtk::geometry::mesh&);
+            void load(const geometry::mesh&);
 
         public:
-            mesh(const rtk::geometry::mesh& geomesh);
+            mesh(const geometry::mesh& geomesh);
             mesh(const mesh&) = delete;
             mesh(mesh&& rhs);
             ~mesh();

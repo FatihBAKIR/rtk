@@ -7,7 +7,7 @@
 
 #include <rtk/graphics/units.hpp>
 
-namespace rtk
+namespace RTK_NAMESPACE
 {
     template <class T>
     struct size {

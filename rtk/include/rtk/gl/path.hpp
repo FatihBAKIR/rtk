@@ -8,7 +8,7 @@
 #include <glad/glad.h>
 #include <cstddef>
 
-namespace rtk
+namespace RTK_NAMESPACE
 {
 namespace gl
 {
@@ -21,7 +21,7 @@ namespace gl
         float width;
 
     public:
-        path(const rtk::geometry::path&);
+        path(const geometry::path&);
         void draw(program&) const;
     };
 }

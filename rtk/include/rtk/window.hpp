@@ -12,9 +12,9 @@
 #include <array>
 #include <glm/vec2.hpp>
 
-namespace rtk {
+namespace RTK_NAMESPACE {
 
-    class window
+    class RTK_PUBLIC window
     {
         GLFWwindow* m_wnd;
 

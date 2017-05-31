@@ -6,7 +6,7 @@
 #include <rtk/geometry/mesh.hpp>
 #include <rtk/gl/program.hpp>
 
-namespace rtk {
+namespace RTK_NAMESPACE {
     namespace gl {
         mesh::mesh(const rtk::geometry::mesh& geomesh)
         {

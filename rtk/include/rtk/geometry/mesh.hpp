@@ -10,11 +10,11 @@
 #include <rtk/rtk_fwd.hpp>
 #include <rtk/physics/aabb.hpp>
 
-namespace rtk
+namespace RTK_NAMESPACE
 {
 namespace geometry
 {
-    class mesh {
+    class RTK_PUBLIC mesh {
         std::size_t vertices_len;
         std::size_t faces_len;
 
@@ -62,7 +62,7 @@ namespace geometry
 
     namespace primitive
     {
-        mesh cube();
+        RTK_PUBLIC mesh cube();
     }
 }
 }

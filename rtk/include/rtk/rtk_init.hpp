@@ -4,9 +4,11 @@
 
 #pragma once
 
-namespace rtk
+#include <rtk/rtk_fwd.hpp>
+
+namespace RTK_NAMESPACE
 {
-    class rtk_init
+    class RTK_PUBLIC rtk_init
     {
         static int init_count;
     public:

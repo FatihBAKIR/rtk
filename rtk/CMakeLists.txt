@@ -29,7 +29,6 @@ set(HEADER_FILES
         ${HEADER_PATH}/graphics/rect.hpp
         ${HEADER_PATH}/rtk_fwd.hpp
         ${HEADER_PATH}/gl/program.hpp
-        ${HEADER_PATH}/gl/vertex_buffer.hpp
         ${HEADER_PATH}/geometry/mesh.hpp
         ${HEADER_PATH}/gl/shader.hpp
         ${HEADER_PATH}/asset/mesh_import.hpp
@@ -40,13 +39,18 @@ set(HEADER_FILES
         ${HEADER_PATH}/physics/aabb.hpp
         ${HEADER_PATH}/camera.hpp
         ${HEADER_PATH}/utility.hpp
+        ${HEADER_PATH}/texture/tex2d.hpp
+        ${HEADER_PATH}/framebuffer.hpp
         )
 
-set(SOURCE_FILES window.cpp rtk_init.cpp display.cpp
-       geometry/mesh.cpp gl/program.cpp asset/mesh_import.cpp gl/mesh.cpp geometry/path.cpp gl/path.cpp mesh_ops.cpp camera.cpp utility.cpp)
+set(SOURCE_FILES src/window.cpp src/rtk_init.cpp src/display.cpp
+        src/geometry/mesh.cpp src/gl/program.cpp src/asset/mesh_import.cpp src/gl/mesh.cpp
+        src/geometry/path.cpp src/gl/path.cpp src/mesh_ops.cpp src/camera.cpp src/utility.cpp
+        src/texture/tex2d.cpp src/framebuffer.cpp)
 
+add_library(glad SHARED ${GLAD_FILES})
 
-add_library(rtk SHARED ${SOURCE_FILES} ${HEADER_FILES} ${GLAD_FILES})
+add_library(rtk SHARED ${SOURCE_FILES} ${HEADER_FILES})
 
 target_compile_definitions(rtk PUBLIC GLFW_INCLUDE_NONE=1)
 
@@ -62,16 +66,19 @@ target_compile_definitions(rtk PUBLIC RTK_NAMESPACE=rtk)
 
 target_include_directories(rtk PUBLIC ${GLM_INCLUDE_DIRS})
 
-target_link_libraries(rtk ${OPENGL_LIBRARIES})
-target_link_libraries(rtk ${GLFW_LIBRARIES})
-target_link_libraries(rtk ${Boost_LIBRARIES})
-target_link_libraries(rtk ${assimp_LIBRARIES})
-target_link_libraries(rtk m dl)
+target_link_libraries(rtk PUBLIC ${OPENGL_LIBRARIES})
+target_link_libraries(rtk PUBLIC ${GLFW_LIBRARIES})
+target_link_libraries(rtk PUBLIC ${Boost_LIBRARIES})
+target_link_libraries(rtk PUBLIC ${assimp_LIBRARIES})
+target_link_libraries(rtk PUBLIC glad)
 
 target_include_directories(rtk PUBLIC ${OPENGL_INCLUDE_DIR})
 target_include_directories(rtk PUBLIC ${GLFW_INCLUDE_DIR})
 target_include_directories(rtk PUBLIC ${Boost_INCLUDE_DIRS})
 target_include_directories(rtk PUBLIC ${assimp_INCLUDE_DIRS})
+
+set_target_properties(rtk PROPERTIES CXX_VISIBILITY_PRESET hidden)
+set_target_properties(rtk PROPERTIES C_VISIBILITY_PRESET hidden)
 
 set(INCLUDE_DEST "include")
 set(LIB_DEST "lib/rtk")
@@ -80,11 +87,19 @@ target_include_directories(rtk PUBLIC
         $<BUILD_INTERFACE:${HEADER_PATH}/../>
         $<INSTALL_INTERFACE:${INCLUDE_DEST}>)
 
+target_include_directories(glad PUBLIC
+        $<BUILD_INTERFACE:${HEADER_PATH}/../>
+        $<INSTALL_INTERFACE:${INCLUDE_DEST}>)
+
+install(TARGETS glad DESTINATION "${LIB_DEST}")
 install(TARGETS rtk DESTINATION "${LIB_DEST}")
+
 install(FILES rtk-config.cmake DESTINATION ${LIB_DEST})
+install(FILES glad-config.cmake DESTINATION ${LIB_DEST})
+
+install(TARGETS rtk glad EXPORT rtk DESTINATION "${LIB_DEST}")
+install(EXPORT rtk DESTINATION "${LIB_DEST}")
+
 install(DIRECTORY ${HEADER_PATH} DESTINATION "${INCLUDE_DEST}")
 install(DIRECTORY ${HEADER_PATH}/../glad DESTINATION "${INCLUDE_DEST}")
 install(DIRECTORY ${HEADER_PATH}/../KHR DESTINATION "${INCLUDE_DEST}")
-
-install(TARGETS rtk EXPORT rtk DESTINATION "${LIB_DEST}")
-install(EXPORT rtk DESTINATION "${LIB_DEST}")
