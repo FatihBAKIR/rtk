@@ -8,7 +8,8 @@
 #include <glad/glad.h>
 #include <rtk/rtk_fwd.hpp>
 #include <string>
-#include <glm/fwd.hpp>
+#include <glm/vec3.hpp>
+#include <glm/mat4x4.hpp>
 
 namespace RTK_NAMESPACE
 {
