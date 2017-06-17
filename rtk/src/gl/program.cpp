@@ -85,6 +85,13 @@ namespace gl
         GLint loc = glGetUniformLocation(id, name.c_str());
         glUniformMatrix4fv(loc, 1, false, glm::value_ptr(v));
     }
+
+    void program::set_array(const std::string& name, gsl::span<const glm::mat4> mats)
+    {
+        use();
+        GLint loc = glGetUniformLocation(id, name.c_str());
+        glUniformMatrix4fv(loc, mats.size(), false, glm::value_ptr(mats[0]));
+    }
 }
 }
 

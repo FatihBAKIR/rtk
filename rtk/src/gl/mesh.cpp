@@ -82,5 +82,13 @@ namespace RTK_NAMESPACE {
             this->swap(std::move(rhs));
             return *this;
         }
+
+    }
+    namespace geometry
+    {
+        gl::mesh create(const rtk::geometry::mesh& m)
+        {
+            return {m};
+        }
     }
 }

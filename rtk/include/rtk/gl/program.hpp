@@ -10,6 +10,7 @@
 #include <string>
 #include <glm/vec3.hpp>
 #include <glm/mat4x4.hpp>
+#include <gsl/span>
 
 namespace RTK_NAMESPACE
 {
@@ -29,6 +30,8 @@ public:
     void set_variable(const std::string& name, int);
     void set_variable(const std::string& name, float);
     void set_variable(const std::string& name, const glm::mat4&);
+
+    void set_array(const std::string& name, gsl::span<const glm::mat4>);
 
     void link();
 

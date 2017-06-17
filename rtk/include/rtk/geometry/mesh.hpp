@@ -48,6 +48,14 @@ namespace geometry
             return {uvs.get(), (long)vertices_len};
         }
 
+        std::size_t get_vertices_size() const {
+            return vertices_len;
+        }
+
+        std::size_t get_faces_size() const {
+            return faces_len;
+        }
+
         bool has_uvs() const {
             return uvs != nullptr;
         }
