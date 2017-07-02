@@ -3,6 +3,7 @@
 //
 
 #include <rtk/asset/mesh_import.hpp>
+#include <rtk/asset/rtk_assimp.hpp>
 
 #include <assimp/cimport.h>
 #include <assimp/postprocess.h>
@@ -11,6 +12,54 @@
 
 namespace rtk {
     namespace assets {
+        namespace assimp
+        {
+            std::vector<glm::vec3> read_positions(const aiMesh* mesh)
+            {
+                std::vector<glm::vec3> pos;
+                pos.reserve(mesh->mNumVertices);
+
+                for (unsigned int j = 0; j<mesh->mNumVertices; ++j) {
+                    glm::vec3 tempVertex;
+                    tempVertex.x = mesh->mVertices[j].x;
+                    tempVertex.y = mesh->mVertices[j].y;
+                    tempVertex.z = mesh->mVertices[j].z;
+                    pos.push_back(tempVertex);
+                }
+
+                return pos;
+            }
+            std::vector<std::uint32_t> read_faces(const aiMesh* mesh)
+            {
+                std::vector<std::uint32_t> faces;
+                faces.reserve(mesh->mNumFaces);
+
+                for (unsigned int j = 0; j<mesh->mNumFaces; ++j) {
+                    aiFace face = mesh->mFaces[j];
+                    Expects(face.mNumIndices==3);
+                    for (unsigned int k = 0; k<face.mNumIndices; ++k) { faces.push_back(face.mIndices[k]); }
+                }
+
+                return faces;
+            }
+
+            std::vector<glm::vec2> read_uvs(const aiMesh* mesh)
+            {
+                std::vector<glm::vec2> uvs;
+                uvs.reserve(mesh->mNumVertices);
+
+                for (unsigned int j = 0; j < mesh->mNumVertices; ++j)
+                {
+                    glm::vec2 uv;
+                    uv.x = mesh->mTextureCoords[0][j].x;
+                    uv.y = mesh->mTextureCoords[0][j].y;
+                    uvs.push_back(uv);
+                }
+
+                return uvs;
+            }
+        }
+
         static std::vector<geometry::mesh> load_meshes(const aiScene* scene)
         {
             if ((!scene) || (scene->mFlags==AI_SCENE_FLAGS_INCOMPLETE) || (!scene->mRootNode)) {
@@ -21,38 +70,13 @@ namespace rtk {
 
             for (int i = 0; i<scene->mNumMeshes; ++i) {
                 auto mesh = scene->mMeshes[i];
-                std::vector<glm::vec3> pos;
-                std::vector<glm::vec2> uvs;
-                std::vector<std::uint32_t> faces;
-
-                for (unsigned int j = 0; j<mesh->mNumVertices; ++j) {
-                    glm::vec3 tempVertex;
-                    tempVertex.x = mesh->mVertices[j].x;
-                    tempVertex.y = mesh->mVertices[j].y;
-                    tempVertex.z = mesh->mVertices[j].z;
-                    pos.push_back(tempVertex);
-                }
-
-                for (unsigned int j = 0; j<mesh->mNumFaces; ++j) {
-                    aiFace face = mesh->mFaces[j];
-                    Expects(face.mNumIndices==3);
-                    for (unsigned int k = 0; k<face.mNumIndices; ++k) { faces.push_back(face.mIndices[k]); }
-                }
+                using namespace assimp;
 
                 rtk::geometry::mesh m;
-                m.set_vertices(pos);
-                m.set_faces(faces);
-
-                if (mesh->HasTextureCoords(0))
-                {
-                    for (unsigned int j = 0; j < mesh->mNumVertices; ++j)
-                    {
-                        glm::vec2 uv;
-                        uv.x = mesh->mTextureCoords[0][j].x;
-                        uv.y = mesh->mTextureCoords[0][j].y;
-                        uvs.push_back(uv);
-                    }
-                    m.set_uvs(uvs);
+                m.set_vertices(read_positions(mesh));
+                m.set_faces(read_faces(mesh));
+                if (mesh->HasTextureCoords(0)) {
+                    m.set_uvs(read_uvs(mesh));
                 }
 
                 meshes.push_back(std::move(m));

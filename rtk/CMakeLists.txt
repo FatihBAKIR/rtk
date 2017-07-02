@@ -32,6 +32,7 @@ set(HEADER_FILES
         ${HEADER_PATH}/geometry/mesh.hpp
         ${HEADER_PATH}/gl/shader.hpp
         ${HEADER_PATH}/asset/mesh_import.hpp
+        ${HEADER_PATH}/asset/rtk_assimp.hpp
         ${HEADER_PATH}/gl/mesh.hpp
         ${HEADER_PATH}/geometry/path.hpp
         ${HEADER_PATH}/gl/path.hpp

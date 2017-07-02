@@ -11,6 +11,14 @@
 #include <gsl/gsl>
 
 namespace RTK_NAMESPACE {
+    namespace gl
+    {
+        class mesh;
+    }
+    namespace geometry
+    {
+        RTK_PUBLIC gl::mesh create(const rtk::geometry::mesh&);
+    }
     namespace gl {
         namespace detail
         {
@@ -29,6 +37,13 @@ namespace RTK_NAMESPACE {
             {
                 static constexpr auto gl_type = GL_FLOAT;
                 static constexpr auto gl_cnt = 3;
+            };
+
+            template <>
+            struct vb_traits<glm::vec4>
+            {
+                static constexpr auto gl_type = GL_FLOAT;
+                static constexpr auto gl_cnt = 4;
             };
 
             template<>
@@ -58,8 +73,10 @@ namespace RTK_NAMESPACE {
 
             void load(const geometry::mesh&);
 
-        public:
             mesh(const geometry::mesh& geomesh);
+
+            friend gl::mesh geometry::create(const geometry::mesh&);
+        public:
             mesh(const mesh&) = delete;
             mesh(mesh&& rhs);
             ~mesh();
@@ -96,5 +113,6 @@ namespace RTK_NAMESPACE {
             glBindVertexArray(0);
         }
     }
+
 }
 
