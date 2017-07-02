@@ -17,7 +17,7 @@ namespace {
 	}
 }
 
-namespace rtk
+namespace RTK_NAMESPACE
 {
 namespace gl
 {
