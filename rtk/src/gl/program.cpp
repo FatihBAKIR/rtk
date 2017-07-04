@@ -25,6 +25,13 @@ namespace gl
         id = glCreateProgram();
     }
 
+    program::~program() {
+        if (id)
+        {
+            glDeleteProgram(id);
+        }
+    }
+
     void program::attach(const vertex_shader & sh) {
         glAttachShader(id, sh.get_id());
     }

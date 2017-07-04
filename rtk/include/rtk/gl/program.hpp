@@ -21,6 +21,12 @@ class RTK_PUBLIC program {
 
 public:
     program();
+    program(const program&) = delete;
+    program(program&& rhs)
+    {
+        id = std::exchange(rhs.id, 0);
+    }
+    ~program();
 
     void attach(const vertex_shader &);
     void attach(const fragment_shader &);
@@ -34,6 +40,12 @@ public:
     void set_array(const std::string& name, gsl::span<const glm::mat4>);
 
     void link();
+
+    program& operator=(const program&) = delete;
+    program& operator=(program&& rhs)
+    {
+        id = std::exchange(rhs.id, 0);
+    }
 
     void use() const;
 };
