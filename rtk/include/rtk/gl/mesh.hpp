@@ -4,6 +4,11 @@
 
 #pragma once
 
+#if defined(RTK_GLES2)
+#include <GLES2/gl2.h>
+#else
+#endif
+
 #include <glad/glad.h>
 #include <rtk/rtk_fwd.hpp>
 #include <map>
@@ -113,6 +118,4 @@ namespace RTK_NAMESPACE {
             glBindVertexArray(0);
         }
     }
-
 }
-

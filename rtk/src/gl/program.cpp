@@ -40,9 +40,11 @@ namespace gl
         glAttachShader(id, sh.get_id());
     }
 
+#if !defined(RTK_GLES2)
     void program::attach(const geometry_shader & sh) {
         glAttachShader(id, sh.get_id());
     }
+#endif
 
     void program::link() {
         glLinkProgram(id);

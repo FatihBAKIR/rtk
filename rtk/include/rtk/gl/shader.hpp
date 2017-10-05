@@ -5,9 +5,9 @@
 #pragma once
 
 #include <string>
-#include <glad/glad.h>
 #include <stdexcept>
 #include <gsl/gsl_assert>
+#include <glad/glad.h>
 
 namespace RTK_NAMESPACE {
     namespace gl {

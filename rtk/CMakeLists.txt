@@ -3,6 +3,9 @@ project(rtk)
 
 LIST(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/../cmake_modules/")
 
+option(RTK_INCLUDE_CAMERA "Build camera" OFF)
+option(RTK_GLES2 "GLES2 Friendly build" ON)
+
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -44,14 +47,30 @@ set(HEADER_FILES
         ${HEADER_PATH}/framebuffer.hpp
         )
 
-set(SOURCE_FILES src/window.cpp src/rtk_init.cpp src/display.cpp
+set(DESKTOP_FILES src/display.cpp src/window.cpp src/rtk_init.cpp src/geometry/path.cpp src/gl/path.cpp)
+
+set(SOURCE_FILES
         src/geometry/mesh.cpp src/gl/program.cpp src/asset/mesh_import.cpp src/gl/mesh.cpp
-        src/geometry/path.cpp src/gl/path.cpp src/mesh_ops.cpp src/camera.cpp src/utility.cpp
+        src/mesh_ops.cpp src/utility.cpp
         src/texture/tex2d.cpp src/framebuffer.cpp)
+
+if (RTK_INCLUDE_CAMERA)
+    set(SOURCE_FILES ${SOURCE_FILES} src/camera.cpp)
+    set(HEADER_FILES ${HEADER_FILES} ${HEADER_PATH}/camera.hpp)
+endif()
+
+if (RTK_CONTEXT_CREATE)
+    set(SOURCE_FILES ${SOURCE_FILES} ${DESKTOP_FILES})
+endif()
 
 add_library(glad SHARED ${GLAD_FILES})
 
 add_library(rtk SHARED ${SOURCE_FILES} ${HEADER_FILES})
+if (RTK_GLES2)
+    target_compile_definitions(rtk PUBLIC RTK_GLES2)
+else()
+    target_link_libraries(rtk PUBLIC glad)
+endif()
 
 target_compile_definitions(rtk PUBLIC GLFW_INCLUDE_NONE=1)
 
@@ -71,7 +90,6 @@ target_link_libraries(rtk PUBLIC ${OPENGL_LIBRARIES})
 target_link_libraries(rtk PUBLIC ${GLFW_LIBRARIES})
 target_link_libraries(rtk PUBLIC ${Boost_LIBRARIES})
 target_link_libraries(rtk PUBLIC assimp)
-target_link_libraries(rtk PUBLIC glad)
 target_link_libraries(rtk PUBLIC SOIL)
 
 target_include_directories(rtk PUBLIC ${OPENGL_INCLUDE_DIR})
