@@ -5,6 +5,7 @@
 #ifndef MALT_TEX2D_HPP
 #define MALT_TEX2D_HPP
 
+#include <memory>
 #include <rtk/rtk_fwd.hpp>
 #include <glm/vec3.hpp>
 #include <glad/glad.h>
@@ -31,7 +32,9 @@ namespace RTK_NAMESPACE {
 
             gray_float,
             rgb_float,
-            rgba_float
+            rgba_float,
+
+            gl_depth16
         };
 
         template <channel_type c_type, int bits_per_channel, int channel_count> struct get_format;
@@ -105,6 +108,7 @@ namespace RTK_NAMESPACE {
 
             friend texture2d create_texture(rtk::resolution, graphics::pixel_format);
             friend class framebuffer;
+            friend RTK_PUBLIC graphics::unsafe_texture read_depth(const texture2d&);
 
         public:
             texture2d(const graphics::unsafe_texture& tex);
@@ -116,6 +120,7 @@ namespace RTK_NAMESPACE {
         };
 
         RTK_PUBLIC texture2d create_texture(rtk::resolution, graphics::pixel_format);
+
     }
 }
 

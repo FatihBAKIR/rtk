@@ -118,6 +118,8 @@ namespace RTK_NAMESPACE {
             case pixel_format::gray_float: return {GL_R8, GL_RED, GL_FLOAT};
             case pixel_format::rgb_float: return {GL_RGB8, GL_RGB, GL_FLOAT};
             case pixel_format::rgba_float: return {GL_RGBA8, GL_RGBA, GL_FLOAT};
+
+                case pixel_format::gl_depth16: return { GL_DEPTH_COMPONENT, GL_DEPTH_COMPONENT, GL_FLOAT };
             }
         }
 
@@ -171,6 +173,15 @@ namespace RTK_NAMESPACE {
             return res;
         }
 
+        graphics::unsafe_texture read_depth(const texture2d & tex) {
+            graphics::unsafe_texture t;
+            t.m_width = tex.get_resolution().width;
+            t.m_height = tex.get_resolution().height;
+            t.m_data = new float[t.m_height * t.m_width];
+            t.m_fmt = graphics::pixel_format::gl_depth16;
+            glReadPixels(0, 0, 1024, 1024, GL_DEPTH_COMPONENT, GL_FLOAT, t.m_data);
+            return t;
+        }
     }
 }
 

@@ -22,7 +22,7 @@ namespace gl
         const texture2d* get_texture() const { return m_render_to; }
 
         void activate() const;
-
+        void activate_depth() const;
     private:
         const texture2d* m_render_to;
         GLuint m_fb_id;

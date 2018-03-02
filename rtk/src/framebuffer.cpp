@@ -37,6 +37,11 @@ namespace gl
         glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_render_to->m_texture_id, 0);
     }
 
+    void framebuffer::activate_depth() const
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, m_fb_id);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_render_to->m_texture_id, 0);
+    }
     void reset_framebuffer()
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
