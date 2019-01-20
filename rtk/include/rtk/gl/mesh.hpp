@@ -7,7 +7,7 @@
 #include <glad/glad.h>
 #include <rtk/rtk_fwd.hpp>
 #include <map>
-#include <glm/vec3.hpp>
+#include <glm/glm.hpp>
 #include <gsl/gsl>
 
 namespace RTK_NAMESPACE {

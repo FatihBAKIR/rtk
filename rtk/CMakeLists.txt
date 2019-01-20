@@ -72,7 +72,7 @@ target_link_libraries(rtk PUBLIC ${GLFW_LIBRARIES})
 target_link_libraries(rtk PUBLIC ${Boost_LIBRARIES})
 target_link_libraries(rtk PUBLIC assimp)
 target_link_libraries(rtk PUBLIC glad)
-target_link_libraries(rtk PUBLIC SOIL)
+target_link_libraries(rtk PUBLIC "/usr/local/lib/libSOIL.so.1")
 
 target_include_directories(rtk PUBLIC ${OPENGL_INCLUDE_DIR})
 target_include_directories(rtk PUBLIC ${GLFW_INCLUDE_DIR})

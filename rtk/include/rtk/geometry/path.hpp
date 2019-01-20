@@ -4,15 +4,16 @@
 
 #pragma once
 
-#include <glm/vec3.hpp>
+#include <rtk/rtk_fwd.hpp>
+#include <glm/glm.hpp>
 #include <gsl/span>
 #include <boost/shared_array.hpp>
 
-namespace RTK_NAMESPACE
+namespace rtk
 {
 namespace geometry
 {
-class path
+class RTK_PUBLIC path
 {
     std::size_t size;
     boost::shared_array<glm::vec3> vertices;

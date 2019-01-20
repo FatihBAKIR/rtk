@@ -45,6 +45,7 @@ public:
     program& operator=(program&& rhs)
     {
         id = std::exchange(rhs.id, 0);
+	    return *this;
     }
 
     void use() const;
