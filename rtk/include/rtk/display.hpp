@@ -11,7 +11,7 @@
 
 namespace RTK_NAMESPACE
 {
-    class display {
+    class RTK_PUBLIC display {
         GLFWmonitor* opaque;
 
         display(GLFWmonitor* mon);
@@ -25,7 +25,7 @@ namespace RTK_NAMESPACE
         resolution get_resolution() const;
     };
 
-    std::vector<display> get_displays();
-    display get_primary_display();
+    std::vector<display> get_displays() RTK_PUBLIC;
+    display get_primary_display() RTK_PUBLIC;
 }
 

@@ -2,61 +2,74 @@
 // Created by Mehmet Fatih BAKIR on 01/04/2017.
 //
 
-// ripoff from learnopengl
-
 #pragma once
 
 #include <glm/glm.hpp>
 #include <glad/glad.h>
 #include <glm/gtc/quaternion.hpp>
+#include <rtk/physics/transform.hpp>
+#include "framebuffer.hpp"
+#include <rtk/display.hpp>
+#include <rtk/rtk_fwd.hpp>
 
 namespace RTK_NAMESPACE
 {
-    enum Camera_Movement {
-        FORWARD,
-        BACKWARD,
-        LEFT,
-        RIGHT
-    };
-
-    const GLfloat YAW        =  0.0f;
-    const GLfloat PITCH      =  0.0f;
-    const GLfloat SPEED      =  15.0f;
-    const GLfloat SENSITIVTY =  0.25f;
-    const GLfloat ZOOM       =  45.0f;
-
-    class camera
+    class RTK_PUBLIC camera
     {
-        glm::vec3 Position;
+        glm::mat4 m_view_matrix;
+        glm::mat4 m_projection_matrix;
+        glm::mat4 m_vp_matrix;
+
+        glm::vec3 m_pos;
 
         glm::quat rotation;
+        bool m_projection_dirty = true;
 
-        GLfloat MovementSpeed;
-        GLfloat MouseSensitivity;
-        GLfloat Zoom;
+        float m_fov = 1.0471975512f; // 60 degrees
+        float m_aspect_ratio = 1.333333f; //800 over 600
+        float m_near_plane = 0.1f;
+        float m_far_plane = 100.0f;
+
+        glm::vec2 m_viewport_pos = {0.f, 0.f};
+        glm::vec2 m_viewport_size = {1.f, 1.f};
+
+        rtk::window* display;
+
+        const rtk::gl::framebuffer* m_fb;
+
     public:
-        camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f));
+        void set_display(rtk::window& d)
+        {
+            display = &d;
+        }
+        void sync();
 
-        glm::mat4 GetViewMatrix() const;
-        glm::mat4 GetProjectionMatrix() const;
+        glm::mat4& get_vp_matrix();
+        const glm::mat4& get_vp_matrix() const;
 
-        // Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
-        void ProcessKeyboard(Camera_Movement direction, GLfloat deltaTime);
+        void set_fov(float fov);
 
-        // Processes input received from a mouse input system. Expects the offset value in both the x and y direction.
-        void ProcessMouseMovement(GLfloat xoffset, GLfloat yoffset, GLboolean constrainPitch = true);
+        /*
+         * sets the aspect ratio from the display the camera is rendering to
+         */
+        void reset_aspect_ratio();
+        void set_aspect_ratio(float aspect_ratio);
+        void set_near_plane(float near_plane);
+        void set_far_plane(float far_plane);
 
-        // Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
-        void ProcessMouseScroll(GLfloat yoffset);
+        void set_viewport(const glm::vec2& pos, const glm::vec2& sz);
 
-        glm::vec3 get_forward() const;
-        glm::vec3 get_up() const;
-        glm::vec3 get_right() const;
+        void render_to_texture(const rtk::gl::framebuffer& fb);
 
-        glm::vec3 get_position() const {
-            return Position;
+        void activate() const;
+
+        void set_transform(std::shared_ptr<rtk::transform> trans)
+        {
+            m_trans = std::move(trans);
         }
 
     private:
+
+        std::shared_ptr<rtk::transform> m_trans;
     };
 }

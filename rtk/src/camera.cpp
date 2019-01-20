@@ -5,74 +5,92 @@
 #include <rtk/camera.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <rtk/utility.hpp>
+#include <rtk/window.hpp>
+#include <rtk/texture/tex2d.hpp>
 
-glm::mat4 rtk::camera::GetViewMatrix() const
+namespace rtk
 {
-    return glm::lookAt(this->Position, this->Position + this->get_forward(), this->get_up());
-}
+    void rtk::camera::sync() {
+        auto camera_transform = m_trans.get();
+        auto right = camera_transform->get_right();
+        auto up = camera_transform->get_up();
+        auto forward = camera_transform->get_forward();
+        auto position = camera_transform->get_pos();
 
-rtk::camera::camera(glm::vec3 position)
-        :
-        MovementSpeed(SPEED),
-        MouseSensitivity(SENSITIVTY),
-        Zoom(ZOOM)
-{
-    this->Position = position;
-}
+        m_view_matrix = glm::lookAt(position, position + forward, up);
 
-void rtk::camera::ProcessMouseMovement(GLfloat xoffset, GLfloat yoffset, GLboolean constrainPitch)
-{
-    xoffset *= this->MouseSensitivity;
-    yoffset *= this->MouseSensitivity;
+        if (m_projection_dirty)
+        {
+            m_projection_matrix = glm::perspective(m_fov, m_aspect_ratio, m_near_plane, m_far_plane);
+            m_projection_dirty = false;
+        }
 
-    auto yaw = glm::angleAxis(glm::radians(xoffset * MouseSensitivity), glm::vec3(0, 1, 0));
-    auto pitch = glm::angleAxis(glm::radians(yoffset * MouseSensitivity), glm::vec3(1, 0, 0));
+        m_vp_matrix = m_projection_matrix * m_view_matrix;
+    }
+    void camera::set_fov(float fov)
+    {
+        m_fov = fov;
+        m_projection_dirty = true;
+    }
 
-    rotation = rotation * pitch; // self
-    rotation = yaw * rotation; // world
+    void camera::set_aspect_ratio(float aspect_ratio)
+    {
+        m_aspect_ratio = aspect_ratio;
+        m_projection_dirty = true;
+    }
 
-    rotation = glm::normalize(rotation);
-}
+    void camera::set_near_plane(float near_plane)
+    {
+        m_near_plane = near_plane;
+        m_projection_dirty = true;
+    }
 
-void rtk::camera::ProcessMouseScroll(GLfloat yoffset)
-{
-    if (this->Zoom >= 1.0f && this->Zoom <= 45.0f)
-        this->Zoom -= yoffset;
-    if (this->Zoom <= 1.0f)
-        this->Zoom = 1.0f;
-    if (this->Zoom >= 45.0f)
-        this->Zoom = 45.0f;
-}
+    void camera::set_far_plane(float far_plane)
+    {
+        m_far_plane = far_plane;
+        m_projection_dirty = true;
+    }
 
-void rtk::camera::ProcessKeyboard(rtk::Camera_Movement direction, GLfloat deltaTime)
-{
-    GLfloat velocity = this->MovementSpeed * deltaTime;
-    if (direction == FORWARD)
-        this->Position += get_forward() * velocity;
-    if (direction == BACKWARD)
-        this->Position -= get_forward() * velocity;
-    if (direction == LEFT)
-        this->Position += get_right() * velocity;
-    if (direction == RIGHT)
-        this->Position -= get_right() * velocity;
-}
+    glm::mat4 &camera::get_vp_matrix()
+    {
+        return m_vp_matrix;
+    }
 
-glm::mat4 rtk::camera::GetProjectionMatrix() const
-{
-    return glm::perspective(45.f, 800.f/600, 0.1f, 10000.f);
-}
+    const glm::mat4 &camera::get_vp_matrix() const
+    {
+        return m_vp_matrix;
+    }
 
-glm::vec3 rtk::camera::get_right() const
-{
-    return rotation * glm::vec3(1, 0, 0);
-}
+    void camera::reset_aspect_ratio()
+    {
+        auto res = display->get_resolution();
+        float aspect = float(res.width) / res.height;
+        set_aspect_ratio(aspect);
+    }
 
-glm::vec3 rtk::camera::get_forward() const
-{
-    return rotation * glm::vec3(0, 0, 1);
-}
+    void camera::activate() const
+    {
+        auto reso = display->get_resolution();
+        if (m_fb)
+        {
+            reso = m_fb->get_texture()->get_resolution();
+            m_fb->activate();
+        }
+        else
+        {
+            rtk::set_viewport(rtk::get_rect(display->get_resolution(), m_viewport_pos, m_viewport_size));
+        }
+    }
 
-glm::vec3 rtk::camera::get_up() const
-{
-    return rotation * glm::vec3(0, 1, 0);
+    void camera::set_viewport(const glm::vec2& pos, const glm::vec2& sz)
+    {
+        m_viewport_pos = pos;
+        m_viewport_size = sz;
+    }
+
+    void camera::render_to_texture(const gl::framebuffer& fb)
+    {
+        m_fb = &fb;
+    }
 }
