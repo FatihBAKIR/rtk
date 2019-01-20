@@ -12,7 +12,7 @@ namespace RTK_NAMESPACE
 {
 namespace gl
 {
-    class path
+    class RTK_PUBLIC path
     {
         GLuint m_vao_id;
         GLuint m_vbo_id;

@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include <rtk/graphics/units.hpp>
+#include <rtk/graphics/size.hpp>
 #include <rtk/rtk_init.hpp>
 #include <rtk/window.hpp>
 
@@ -14,6 +16,7 @@
 #include <rtk/gl/path.hpp>
 #include <rtk/gl/mesh.hpp>
 #include <rtk/mesh_ops.hpp>
+#include <glm/gtx/transform.hpp>
 
 std::string read_text_file(const std::string& path)
 {
@@ -27,7 +30,7 @@ int main() {
     using namespace rtk::literals;
     using namespace std::chrono_literals;
 
-    rtk::window w({800_px, 600_px});
+    rtk::window w({1600_px, 1600_px});
 
     auto meshes = rtk::assets::load_meshes("../assets/teapot.obj");
 
@@ -36,7 +39,7 @@ int main() {
 
     for (auto& m : meshes)
     {
-        gl_meshes.emplace_back(m);
+        gl_meshes.emplace_back(create(m));
     }
 
     rtk::gl::vertex_shader line_vs { read_text_file("../shaders/line.vert").c_str() };
@@ -45,7 +48,6 @@ int main() {
 
     rtk::gl::vertex_shader mesh_vs { read_text_file("../shaders/basic.vert").c_str() };
     rtk::gl::fragment_shader mesh_fs { read_text_file("../shaders/basic.frag").c_str() };
-
 
     rtk::gl::program path_shader;
     path_shader.attach(line_vs);
@@ -58,6 +60,18 @@ int main() {
     mesh_shader.attach(mesh_vs);
     mesh_shader.attach(mesh_fs);
     mesh_shader.link();
+
+    auto& mesh = meshes[0];
+    auto max = std::max({mesh.get_bbox().extent.x, mesh.get_bbox().extent.y, mesh.get_bbox().extent.z});
+    auto model = glm::scale(glm::vec3(1.f, 1.f, 1.f) / glm::vec3(max, max, max)) * glm::translate(- mesh.get_bbox().position);
+
+    mesh_shader.set_variable("model", model);
+    mesh_shader.set_variable("view", glm::identity<glm::mat4>());
+    mesh_shader.set_variable("projection", glm::identity<glm::mat4>());
+
+    path_shader.set_variable("model", model);
+    path_shader.set_variable("view", glm::identity<glm::mat4>());
+    path_shader.set_variable("projection", glm::identity<glm::mat4>());
 
     rtk::geometry::path p;
     p.set_vertices(std::vector<glm::vec3>{ meshes[0].get_vertices()[0], meshes[0].get_vertices()[1], meshes[0].get_vertices()[2] });

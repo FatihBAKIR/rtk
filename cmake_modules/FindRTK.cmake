@@ -1,6 +1,6 @@
 find_path(RTK_INCLUDE_DIR
-        NAMES rtk_fwd.hpp
-        PATHS /usr/local/include /usr/include "${RTK_ROOT}")
+        NAMES rtk/rtk_fwd.hpp
+        PATHS /usr/local/include /usr/include "${RTK_ROOT}/include")
 
 find_library(RTK_LIBRARIES
         NAMES rtk
@@ -8,7 +8,7 @@ find_library(RTK_LIBRARIES
 
 find_path(GLAD_INCLUDE_DIR
         NAMES glad/glad.h KHR/khrplatform.h
-        PATHS /usr/local/include /usr/include "${RTK_ROOT}")
+        PATHS /usr/local/include /usr/include "${RTK_ROOT}/include")
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(RTK DEFAULT_MSG RTK_INCLUDE_DIR)
@@ -24,7 +24,7 @@ if (RTK_FOUND)
     endif()
 
     set(RTK_INCLUDE_DIRS "")
-    list(APPEND RTK_INCLUDE_DIRS "${RTK_INCLUDE_DIR}/..")
+    list(APPEND RTK_INCLUDE_DIRS "${RTK_INCLUDE_DIR}")
     list(APPEND RTK_INCLUDE_DIRS "${GLFW_INCLUDE_DIRS}")
     list(APPEND RTK_INCLUDE_DIRS "${OPENGL_INCLUDE_DIR}")
     list(APPEND RTK_INCLUDE_DIRS "${assimp_INCLUDE_DIRS}")
@@ -39,7 +39,7 @@ if (RTK_FOUND)
     list(APPEND RTK_LIBRARIES "m")
     list(APPEND RTK_LIBRARIES "dl")
 
-    set(RTK_COMPILE_FLAGS "GLFW_INCLUDE_NONE=1")
+    set(RTK_COMPILE_FLAGS "GLFW_INCLUDE_NONE=1 -DRTK_NAMESPACE=rtk")
 endif()
 
 mark_as_advanced(RTK_INCLUDE_DIR)
