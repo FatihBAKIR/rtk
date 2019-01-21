@@ -94,7 +94,7 @@ public:
     cam_controller(std::unique_ptr<rtk::camera> cam, rtk::window& w)
         : m_win{&w}, m_cam(std::move(cam))
     {
-        m_cam->get_transform()->translate(rtk::vectors::back);
+        m_cam->get_transform()->translate(rtk::vectors::back * 2.f);
     }
 
     rtk::camera& get_camera() const
@@ -162,17 +162,11 @@ struct ambient_light
     glm::vec3 ambient;
 };
 
-struct render_ctx
+struct scene
 {
     std::vector<renderable> objects;
     std::vector<spot_light> lights;
     ambient_light ambient;
-};
-
-struct light_info
-{
-    spot_light pl;
-    rtk::gl::texture2d sm;
 };
 
 void apply(rtk::gl::program& p, const std::string& base, const spot_light& pl)
@@ -186,7 +180,7 @@ void apply(rtk::gl::program& p, const ambient_light& al)
     p.set_variable("ambient_light", al.ambient);
 }
 
-auto light_pass(const render_ctx& ctx, const spot_light& l)
+auto light_pass(const scene& ctx, const spot_light& l)
 {
     using namespace rtk::literals;
     auto out = rtk::gl::create_texture(
@@ -197,12 +191,13 @@ auto light_pass(const render_ctx& ctx, const spot_light& l)
 
     static auto shader = get_shadow_shader();
 
-    const glm::mat4 dpm = glm::ortho<float>(-2, 2, -2, 2, 0.1f, 10.f);
+    const glm::mat4 dpm = glm::ortho<float>(-5, 5, -5, 5, 0.1f, 10.f);
 
     auto& trans = l.transform;
+    auto pos = trans->get_pos();
     auto dvm = glm::lookAt(
-            trans->get_pos(),
-            trans->get_pos() + trans->get_forward(),
+            pos,
+            pos + trans->get_forward(),
             trans->get_up());
 
     const auto mvp = dpm * dvm;
@@ -236,7 +231,7 @@ struct shadow_ctx
 
 void render_one(
         const rtk::camera& cam,
-        const render_ctx& ctx,
+        const scene& ctx,
         const shadow_ctx& shadow,
         const renderable& obj)
 {
@@ -274,7 +269,8 @@ void render_one(
     }
 }
 
-void render(const rtk::camera& cam, const render_ctx& ctx)
+std::shared_ptr<rtk::gl::texture2d> sm;
+void render(const rtk::camera& cam, const scene& ctx)
 {
     shadow_ctx shadow;
 
@@ -284,6 +280,7 @@ void render(const rtk::camera& cam, const render_ctx& ctx)
         auto [out, vp] = light_pass(ctx, light);
         shadow.sms.push_back(out);
         shadow.light_transforms.push_back(vp);
+        sm = out;
     }
     glCullFace(GL_BACK);
 
@@ -377,21 +374,23 @@ int main(int argc, char** argv) {
     ground.transform->set_scale({25, 1, 25});
 
     spot_light pl;
-    pl.color = glm::vec3{ 50, 5, 5 } / 2.f;
+    pl.color = glm::vec3{ 25, 0, 0 };
     pl.transform->set_position({ -5, 5, 0 });
-    pl.transform->look_at(teapot.transform->get_pos());
 
     spot_light pl2;
-    pl2.color = glm::vec3{ 5, 5, 50 } / 2.f;
+    pl2.color = glm::vec3{ 0, 0, 25 };
     pl2.transform->set_position({ 5, 5, 0 });
-    pl2.transform->look_at(teapot.transform->get_pos());
 
     spot_light pl3;
-    pl3.color = glm::vec3{ 5, 50, 5 } / 2.f;
+    pl3.color = glm::vec3{ 0, 25, 0 };
     pl3.transform->set_position({ 0, 5, -5 });
-    pl3.transform->look_at(teapot.transform->get_pos());
 
-    render_ctx ctx;
+    auto lights_p = std::make_shared<rtk::transform>();
+    pl.transform->set_parent(lights_p);
+    pl2.transform->set_parent(lights_p);
+    pl3.transform->set_parent(lights_p);
+
+    scene ctx;
     ctx.objects.push_back(teapot);
     ctx.objects.push_back(ground);
     ctx.objects.push_back(bounds);
@@ -405,25 +404,30 @@ int main(int argc, char** argv) {
     using namespace std::chrono_literals;
     using clk = std::chrono::system_clock;
     std::chrono::microseconds dt = 10ms;
+    for (auto& l : ctx.lights) l.transform->look_at(teapot.transform->get_pos());
 
     while (!w.should_close())
     {
         auto beg = clk::now();
         ImGui_ImplGlfwGL3_NewFrame();
 
+        if (w.get_key_down(GLFW_KEY_L))
+        {
+            lights_p->rotate(glm::vec3{0, 1, 0});
+            auto pos = ctx.lights[0].transform->get_pos();
+            std::cout << pos.x << ", " << pos.y << ", " << pos.z << '\n';
+        }
+
         w.begin_draw();
         w.set_viewport();
 
-        if (w.get_key_down(GLFW_KEY_DOWN))
-        {
-            teapot.transform->translate(rtk::vectors::down * 0.01f);
-        }
         cc.pre_render(dt.count() / 1'000'000.f);
 
         render(cc.get_camera(), ctx);
 
         ImGui::Begin("About");
         ImGui::Text("FPS: %d", int(1000 / (dt.count() / 1'000.f)));
+        ImGui::ImageButton((void*)sm->get_id(), ImVec2{256,256});
         ImGui::End();
 
         ImGui::Render();

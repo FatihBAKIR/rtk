@@ -130,7 +130,7 @@ namespace rtk
         float cosTheta = dot(start, dest);
         vec3 rotationAxis;
 
-        if (cosTheta < -1 + 0.001f){
+        if (cosTheta < -1 + 0.1f){
             // special case when vectors in opposite directions:
             // there is no "ideal" rotation axis
             // So guess one; any will do as long as it's perpendicular to start
@@ -155,11 +155,40 @@ namespace rtk
         );
     }
 
+    glm::quat safeQuatLookAt(
+            glm::vec3 const& lookFrom,
+            glm::vec3 const& lookTo,
+            glm::vec3 const& up,
+            glm::vec3 const& alternativeUp)
+    {
+        glm::vec3  direction       = lookTo - lookFrom;
+        float      directionLength = glm::length(direction);
+
+        // Check if the direction is valid; Also deals with NaN
+        if(!(directionLength > 0.0001))
+            return glm::quat(1, 0, 0, 0); // Just return identity
+
+        // Normalize direction
+        direction /= directionLength;
+
+        // Is the normal up (nearly) parallel to direction?
+        if(glm::abs(glm::dot(direction, up)) > .9999f) {
+            // Use alternative up
+            return glm::quatLookAtLH(direction, alternativeUp);
+        }
+        else {
+            return glm::quatLookAtLH(direction, up);
+        }
+    }
+
     void transform::look_at(const glm::vec3& to)
     {
         using namespace glm;
-        auto rotation = RotationBetweenVectors(get_forward(), to - get_pos());
-        this->rotate(rotation, space::self);
+        auto des = normalize(get_pos() - to);
+        //auto rotation = RotationBetweenVectors(get_forward(), des);
+        //set_rotation(quatLookAt(des, get_up()));
+        set_rotation(safeQuatLookAt(get_pos(), to, get_up(), get_right()));
+        //this->rotate(rotation, space::self);
     }
 
     glm::vec3 transform::get_pos() const

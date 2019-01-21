@@ -83,7 +83,7 @@ namespace rtk
         mutable bool m_local_mat_dirty = true;
         mutable glm::mat4 m_local_mat;
 
-        mutable bool m_world_mat_dirty;
+        mutable bool m_world_mat_dirty = true;
         mutable glm::mat4 m_world_mat;
 
         void set_local_dirty()
