@@ -17,8 +17,6 @@ namespace RTK_NAMESPACE
 namespace gl
 {
 class RTK_PUBLIC program {
-    GLuint id;
-
 public:
     program();
     program(const program&) = delete;
@@ -36,6 +34,7 @@ public:
     void set_variable(const std::string& name, int);
     void set_variable(const std::string& name, float);
     void set_variable(const std::string& name, const glm::mat4&);
+    void set_variable(const std::string& name, int tex_id, const gl::texture2d&);
 
     void set_array(const std::string& name, gsl::span<const glm::mat4>);
 
@@ -49,6 +48,10 @@ public:
     }
 
     void use() const;
+
+private:
+    GLuint id;
+
 };
 }
 }

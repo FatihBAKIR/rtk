@@ -29,6 +29,7 @@ namespace rtk {
 
                 return pos;
             }
+
             std::vector<std::uint32_t> read_faces(const aiMesh* mesh)
             {
                 std::vector<std::uint32_t> faces;
@@ -36,8 +37,23 @@ namespace rtk {
 
                 for (unsigned int j = 0; j<mesh->mNumFaces; ++j) {
                     aiFace face = mesh->mFaces[j];
-                    Expects(face.mNumIndices==3);
-                    for (unsigned int k = 0; k<face.mNumIndices; ++k) { faces.push_back(face.mIndices[k]); }
+                    //Expects(face.mNumIndices==3);
+                    if (face.mNumIndices == 3)
+                    {
+                        for (unsigned int k = 0; k < face.mNumIndices; ++k) {
+                            faces.push_back(face.mIndices[k]);
+                        }
+                    }
+                    else if (face.mNumIndices == 4)
+                    {
+                        for (unsigned int k = 0; k < 3; ++k) {
+                            faces.push_back(face.mIndices[k]);
+                        }
+
+                        faces.push_back(face.mIndices[2]);
+                        faces.push_back(face.mIndices[3]);
+                        faces.push_back(face.mIndices[0]);
+                    }
                 }
 
                 return faces;

@@ -60,7 +60,7 @@ std::shared_ptr<rtk::gl::program> load_shader(const std::string& vert, const std
 
 std::shared_ptr<rtk::gl::program> get_phong_shader()
 {
-    return load_shader("../shaders/basic.vert", "../shaders/basic.frag");
+    return load_shader("../shaders/phong.vert", "../shaders/phong.frag");
 }
 
 std::shared_ptr<rtk::gl::program> get_shadow_shader()
@@ -84,7 +84,6 @@ public:
         camera_trans->translate(movement);
         camera_trans->look_at({0,0,0});
         m_cam->sync();
-        m_cam->activate();
     }
 
     void set_speed(float s)
@@ -109,16 +108,17 @@ private:
     std::unique_ptr<rtk::camera> m_cam;
 };
 
-struct point_light
+struct spot_light
 {
     glm::vec3 color;
-    rtk::transform transform;
+    std::shared_ptr<rtk::transform> transform = std::make_shared<rtk::transform>();
 };
 
 struct material
 {
 public:
     virtual rtk::gl::program& go() = 0;
+    virtual std::unique_ptr<material> clone() const = 0;
     virtual ~material() = default;
 };
 
@@ -134,6 +134,12 @@ struct phong_material : material
         return *shader;
     }
 
+    std::unique_ptr<material> clone() const override {
+        auto res = std::make_unique<phong_material>();
+        *res = *this;
+        return res;
+    }
+
     glm::vec3 diffuse;
     glm::vec3 specular;
     glm::vec3 ambient;
@@ -147,6 +153,8 @@ struct renderable
     rtk::gl::mesh* mesh;
     std::shared_ptr<rtk::transform> transform = std::make_shared<rtk::transform>();
     std::shared_ptr<material> mat;
+    bool wire = false;
+    bool cast_shadow = true;
 };
 
 struct ambient_light
@@ -157,21 +165,20 @@ struct ambient_light
 struct render_ctx
 {
     std::vector<renderable> objects;
-    std::vector<point_light> lights;
-    std::vector<std::shared_ptr<rtk::gl::texture2d>> sms;
+    std::vector<spot_light> lights;
     ambient_light ambient;
 };
 
 struct light_info
 {
-    point_light pl;
+    spot_light pl;
     rtk::gl::texture2d sm;
 };
 
-void apply(rtk::gl::program& p, const std::string& base, const point_light& pl)
+void apply(rtk::gl::program& p, const std::string& base, const spot_light& pl)
 {
     p.set_variable(base + ".intensity", pl.color);
-    p.set_variable(base + ".position", pl.transform.get_pos());
+    p.set_variable(base + ".position", pl.transform->get_pos());
 }
 
 void apply(rtk::gl::program& p, const ambient_light& al)
@@ -179,48 +186,59 @@ void apply(rtk::gl::program& p, const ambient_light& al)
     p.set_variable("ambient_light", al.ambient);
 }
 
-struct shadow_ctx
-{
-};
-
-const glm::mat4 dpm = glm::ortho<float>(-1, 1, -1, 1, 0.1f, 10.f);
-
-auto light_pass(render_ctx& ctx, const point_light& l)
+auto light_pass(const render_ctx& ctx, const spot_light& l)
 {
     using namespace rtk::literals;
     auto out = rtk::gl::create_texture(
-            rtk::resolution(1024_px, 1024_px),
+            rtk::resolution(4096_px, 4096_px),
             rtk::graphics::pixel_format::gl_depth16);
     out->activate(0);
-    auto shadow_buf = new rtk::gl::framebuffer(*out);
+    rtk::gl::framebuffer shadow_buf(*out);
 
     static auto shader = get_shadow_shader();
 
-    auto trans = &l.transform;
+    const glm::mat4 dpm = glm::ortho<float>(-2, 2, -2, 2, 0.1f, 10.f);
+
+    auto& trans = l.transform;
     auto dvm = glm::lookAt(
             trans->get_pos(),
             trans->get_pos() + trans->get_forward(),
             trans->get_up());
+
     const auto mvp = dpm * dvm;
 
     shader->set_variable("vp", mvp);
+    shadow_buf.activate_depth();
+    shadow_buf.set_viewport();
 
-    glViewport(0, 0, out->get_resolution().width, out->get_resolution().height);
-    shadow_buf->activate_depth();
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
     glClear(GL_DEPTH_BUFFER_BIT);
 
     for (auto& obj : ctx.objects)
     {
+        if (!obj.cast_shadow)
+        {
+            continue;
+        }
         shader->set_variable("model", obj.transform->get_world_mat4());
         obj.mesh->draw(*shader);
     }
 
-    return out;
+    return make_pair(out, mvp);
 }
 
-void render_one(const rtk::camera& cam, const render_ctx& ctx, const renderable& obj)
+struct shadow_ctx
+{
+    std::vector<std::shared_ptr<rtk::gl::texture2d>> sms;
+    std::vector<glm::mat4> light_transforms;
+};
+
+void render_one(
+        const rtk::camera& cam,
+        const render_ctx& ctx,
+        const shadow_ctx& shadow,
+        const renderable& obj)
 {
     auto mat = obj.mat.get();
     auto& shader = mat->go();
@@ -233,32 +251,47 @@ void render_one(const rtk::camera& cam, const render_ctx& ctx, const renderable&
     for (auto& pl : ctx.lights)
     {
         apply(shader, "point_light[" + std::to_string(pl_num) + "]", pl);
+
+        shader.set_variable("point_light[" + std::to_string(pl_num) + "].shadowTex", pl_num, *shadow.sms[pl_num]);
+        shader.set_variable("point_light[" + std::to_string(pl_num) + "].transform", shadow.light_transforms[pl_num]);
+
         pl_num++;
     }
+
     shader.set_variable("number_of_point_lights", pl_num);
-    shader.set_variable("shadowTex", 0);
-    auto trans = &ctx.lights[0].transform;
-
-    auto dvm = glm::lookAt(
-            trans->get_pos(),
-            trans->get_pos() + trans->get_forward(),
-            trans->get_up());
-
-    const auto mvp = dpm * dvm;
-
-    shader.set_variable("lightMat", mvp);
 
     apply(shader, ctx.ambient);
 
-    ctx.sms[0]->activate(0);
+    cam.activate();
+    if (obj.wire)
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    }
     obj.mesh->draw(shader);
+    if (obj.wire)
+    {
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    }
 }
 
-void render(rtk::camera& cam, render_ctx& ctx)
+void render(const rtk::camera& cam, const render_ctx& ctx)
 {
+    shadow_ctx shadow;
+
+    glCullFace(GL_FRONT);
+    for (auto& light : ctx.lights)
+    {
+        auto [out, vp] = light_pass(ctx, light);
+        shadow.sms.push_back(out);
+        shadow.light_transforms.push_back(vp);
+    }
+    glCullFace(GL_BACK);
+
+    rtk::gl::reset_framebuffer();
+
     for (auto& obj : ctx.objects)
     {
-        render_one(cam, ctx, obj);
+        render_one(cam, ctx, shadow, obj);
     }
 }
 
@@ -275,16 +308,18 @@ void init_imgui(rtk::window& win)
     style.WindowRounding = 0;
 }
 
-int main() {
-    rtk::rtk_init init;
-
+int main(int argc, char** argv) {
     using namespace rtk::literals;
     using namespace std::chrono_literals;
 
+    std::cout << "loading mesh from " << argv[1] << '\n';
+    auto meshes = rtk::assets::load_meshes(argv[1]);
+    meshes.push_back(rtk::geometry::primitive::cube());
+
+    rtk::rtk_init init;
+
     rtk::window w({1920_px, 1080_px});
     init_imgui(w);
-
-    auto meshes = rtk::assets::load_meshes("../assets/teapot.obj");
 
     std::vector<rtk::gl::mesh> gl_meshes;
     gl_meshes.reserve(meshes.size());
@@ -315,53 +350,88 @@ int main() {
     teapot.transform->set_scale(glm::vec3(1.f, 1.f, 1.f) / glm::vec3(max, max, max));
     teapot.transform->set_position(-mesh.get_bbox().position / glm::vec3(max, max, max));
 
-    point_light pl;
-    pl.color = glm::vec3{ 200, 20, 20 } / 4.f;
-    pl.transform.set_position({ -5, 5, 0 });
-    pl.transform.look_at(teapot.transform->get_pos());
+    auto scaled = mesh.get_bbox().extent / glm::vec3(max, max, max);
+
+    renderable bounds{};
+    bounds.name = "bounds";
+    bounds.mat = mat->clone();
+    auto bounds_mat = dynamic_cast<phong_material*>(bounds.mat.get());
+    bounds_mat->diffuse = {0, 0, 0};
+    bounds_mat->specular = {0, 0, 0};
+    bounds.mesh = &gl_meshes[1];
+    bounds.wire = true;
+    bounds.cast_shadow = false;
+    bounds.transform->set_parent(teapot.transform);
+    bounds.transform->set_scale(mesh.get_bbox().extent);
+    bounds.transform->set_position(mesh.get_bbox().position);
+
+    teapot.transform->translate(rtk::vectors::down * (1 - scaled.y) * 0.5f);
+
+    renderable ground{};
+    ground.name = "ground 2";
+    ground.mat = mat;
+    ground.mesh = &gl_meshes[1];
+    ground.cast_shadow = false;
+
+    ground.transform->translate(rtk::vectors::down);
+    ground.transform->set_scale({25, 1, 25});
+
+    spot_light pl;
+    pl.color = glm::vec3{ 50, 5, 5 } / 2.f;
+    pl.transform->set_position({ -5, 5, 0 });
+    pl.transform->look_at(teapot.transform->get_pos());
+
+    spot_light pl2;
+    pl2.color = glm::vec3{ 5, 5, 50 } / 2.f;
+    pl2.transform->set_position({ 5, 5, 0 });
+    pl2.transform->look_at(teapot.transform->get_pos());
+
+    spot_light pl3;
+    pl3.color = glm::vec3{ 5, 50, 5 } / 2.f;
+    pl3.transform->set_position({ 0, 5, -5 });
+    pl3.transform->look_at(teapot.transform->get_pos());
 
     render_ctx ctx;
     ctx.objects.push_back(teapot);
+    ctx.objects.push_back(ground);
+    ctx.objects.push_back(bounds);
     ctx.lights.push_back(pl);
+    ctx.lights.push_back(pl2);
+    ctx.lights.push_back(pl3);
     ctx.ambient = ambient_light{ glm::vec3{ .1, .1, .1 } };
-    ctx.sms.resize(1);
 
     cam_controller cc{std::make_unique<rtk::camera>(w), w};
 
     using namespace std::chrono_literals;
     using clk = std::chrono::system_clock;
     std::chrono::microseconds dt = 10ms;
+
     while (!w.should_close())
     {
         auto beg = clk::now();
         ImGui_ImplGlfwGL3_NewFrame();
 
         w.begin_draw();
+        w.set_viewport();
 
-        auto out = light_pass(ctx, ctx.lights[0]);
-        ctx.sms[0] = out;
-
-        ImGui::Begin("About");
-        ImGui::SetWindowPos(ImVec2{300, 300}, ImGuiCond_Once);
-        ImGui::SetWindowSize(ImVec2{300, 320});
-        ImGui::ImageButton((void*)out->get_id(), ImVec2(280, 280), ImVec2(0, 0), ImVec2(1, 1), 0);
-        ImGui::End();
-
-        rtk::gl::reset_framebuffer();
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+        if (w.get_key_down(GLFW_KEY_DOWN))
+        {
+            teapot.transform->translate(rtk::vectors::down * 0.01f);
+        }
         cc.pre_render(dt.count() / 1'000'000.f);
 
         render(cc.get_camera(), ctx);
 
-        glViewport(0, 0, w.get_resolution().width, w.get_resolution().height);
+        ImGui::Begin("About");
+        ImGui::Text("FPS: %d", int(1000 / (dt.count() / 1'000.f)));
+        ImGui::End();
+
         ImGui::Render();
         ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
 
         w.end_draw();
 
         auto dur = std::chrono::duration_cast<std::chrono::microseconds>(clk::now() - beg);
-        std::this_thread::sleep_for(10ms - dt);
-        dt = 10ms;
+        dt = dur;
     }
 }

@@ -23,6 +23,9 @@ namespace gl
 
         void activate() const;
         void activate_depth() const;
+
+        void set_viewport();
+
     private:
         const texture2d* m_render_to;
         GLuint m_fb_id;

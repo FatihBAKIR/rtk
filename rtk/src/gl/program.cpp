@@ -8,14 +8,7 @@
 #include <glm/vec3.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
-
-namespace {
-	std::string read_text_file(const std::string& path)
-	{
-		std::ifstream f(path);
-		return {std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>()};
-	}
-}
+#include <rtk/texture/tex2d.hpp>
 
 namespace RTK_NAMESPACE
 {
@@ -91,6 +84,14 @@ namespace gl
         use();
         GLint loc = glGetUniformLocation(id, name.c_str());
         glUniformMatrix4fv(loc, 1, false, glm::value_ptr(v));
+    }
+
+    void program::set_variable(const std::string& name, int tex, const gl::texture2d& v)
+    {
+        use();
+        GLint loc = glGetUniformLocation(id, name.c_str());
+        v.activate(tex);
+        glUniform1i(loc, tex);
     }
 
     void program::set_array(const std::string& name, gsl::span<const glm::mat4> mats)

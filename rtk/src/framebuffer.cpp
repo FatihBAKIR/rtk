@@ -6,6 +6,8 @@
 #include <utility>
 #include "rtk/framebuffer.hpp"
 #include <rtk/texture/tex2d.hpp>
+#include <rtk/framebuffer.hpp>
+
 
 namespace RTK_NAMESPACE
 {
@@ -42,6 +44,10 @@ namespace gl
     {
         glBindFramebuffer(GL_FRAMEBUFFER, m_fb_id);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_render_to->m_texture_id, 0);
+    }
+
+    void framebuffer::set_viewport() {
+        glViewport(0, 0, m_render_to->get_resolution().width, m_render_to->get_resolution().height);
     }
 
     void reset_framebuffer()

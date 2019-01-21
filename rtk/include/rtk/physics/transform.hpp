@@ -25,6 +25,9 @@ namespace rtk
 
         static inline const glm::vec3 forward {0, 0, 1};
         static inline const glm::vec3 back = -forward;
+
+        static inline const glm::vec3 up {0, 1, 0};
+        static inline const glm::vec3 down = -up;
     };
 
     class RTK_PUBLIC transform : public std::enable_shared_from_this<transform>
@@ -77,7 +80,7 @@ namespace rtk
         glm::vec3 scale = {1, 1, 1};
         glm::quat rot = glm::identity<glm::quat>();
 
-        mutable bool m_local_mat_dirty;
+        mutable bool m_local_mat_dirty = true;
         mutable glm::mat4 m_local_mat;
 
         mutable bool m_world_mat_dirty;

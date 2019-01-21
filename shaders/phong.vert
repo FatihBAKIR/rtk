@@ -2,22 +2,32 @@
 
 layout (location = 0) in vec3 position;
 layout (location = 1) in vec3 normal;
-//layout (location = 2) in vec2 uv;
 
-out vec4 light_pos;
+out vec4 light_pos[8];
 out vec4 world_position;
 out vec4 world_normal;
-//out vec2 frag_uv;
+
+struct PointLight
+{
+    vec3 intensity;
+    vec3 position;
+    sampler2D shadowTex;
+    mat4 transform;
+};
 
 uniform mat4 model;
 uniform mat4 vp;
-uniform mat4 lightMat;
+
+uniform PointLight point_light[8];
+uniform int number_of_point_lights;
 
 void main()
 {
     world_position = model * vec4(position, 1.0);
-    light_pos = lightMat * model * vec4(position, 1.0);
+    for (int i = 0; i < number_of_point_lights; ++i)
+    {
+        light_pos[i] = point_light[i].transform * model * vec4(position, 1.0);
+    }
     world_normal = vec4(normalize(vec3(transpose(inverse(model)) * vec4(normal, 0.0f))), 0);
 	gl_Position = vp * model * vec4(position, 1.0);
-	//frag_uv = uv;
 }

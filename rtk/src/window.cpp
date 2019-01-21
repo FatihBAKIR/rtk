@@ -148,7 +148,7 @@ namespace rtk {
     resolution window::get_resolution() const
     {
         int w, h;
-        glfwGetWindowSize(m_wnd, &w, &h);
+        glfwGetFramebufferSize(m_wnd, &w, &h);
         return { rtk::pixels(w), rtk::pixels(h) };
     }
 
