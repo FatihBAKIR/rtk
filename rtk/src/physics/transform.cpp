@@ -159,7 +159,7 @@ namespace rtk
     {
         using namespace glm;
         auto rotation = RotationBetweenVectors(get_forward(), to - get_pos());
-        rotate(rotation, space::self);
+        this->rotate(rotation, space::self);
     }
 
     glm::vec3 transform::get_pos() const

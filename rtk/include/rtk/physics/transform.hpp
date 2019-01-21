@@ -75,7 +75,7 @@ namespace rtk
 
         glm::vec3 m_pos = {0, 0, 0};
         glm::vec3 scale = {1, 1, 1};
-        glm::quat rot;
+        glm::quat rot = glm::identity<glm::quat>();
 
         mutable bool m_local_mat_dirty;
         mutable glm::mat4 m_local_mat;

@@ -78,6 +78,7 @@ crashlytics-build.properties
 fabric.properties
 
 cmake-build-debug/
+cmake-build-release/
 rtk/build/
 rtk/bui/
 .idea/

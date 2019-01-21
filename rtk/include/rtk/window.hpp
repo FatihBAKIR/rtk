@@ -45,6 +45,9 @@ namespace RTK_NAMESPACE {
         void use() const;
         void set_vsync(bool on);
 
+        void set_viewport();
+
+        auto get() { return m_wnd; }
     private:
 
     };

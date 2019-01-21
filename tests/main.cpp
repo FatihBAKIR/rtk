@@ -21,7 +21,8 @@
 #include <rtk/camera.hpp>
 #include <rtk/texture/tex2d.hpp>
 
-#include <opencv2/opencv.hpp>
+#include <rtk/imgui.h>
+#include "imgui_glfw.hpp"
 
 std::string read_text_file(const std::string& path)
 {
@@ -76,11 +77,12 @@ public:
         glm::vec3 movement{};
         if (m_win->get_key_down(GLFW_KEY_S)) movement += rtk::vectors::back;
         if (m_win->get_key_down(GLFW_KEY_W)) movement += rtk::vectors::forward;
-        if (m_win->get_key_down(GLFW_KEY_A)) movement += rtk::vectors::left;
-        if (m_win->get_key_down(GLFW_KEY_D)) movement += rtk::vectors::right;
+        if (m_win->get_key_down(GLFW_KEY_A)) movement += rtk::vectors::left * 2.f;
+        if (m_win->get_key_down(GLFW_KEY_D)) movement += rtk::vectors::right * 2.f;
         normalize(movement);
         movement *= m_speed * dt;
         camera_trans->translate(movement);
+        camera_trans->look_at({0,0,0});
         m_cam->sync();
         m_cam->activate();
     }
@@ -93,6 +95,7 @@ public:
     cam_controller(std::unique_ptr<rtk::camera> cam, rtk::window& w)
         : m_win{&w}, m_cam(std::move(cam))
     {
+        m_cam->get_transform()->translate(rtk::vectors::back);
     }
 
     rtk::camera& get_camera() const
@@ -180,9 +183,9 @@ struct shadow_ctx
 {
 };
 
-const glm::mat4 dpm = glm::ortho<float>(-10, 10, -10, 10, 0.1f, 5.f);
+const glm::mat4 dpm = glm::ortho<float>(-1, 1, -1, 1, 0.1f, 10.f);
 
-auto light_pass(render_ctx& ctx, point_light& l)
+auto light_pass(render_ctx& ctx, const point_light& l)
 {
     using namespace rtk::literals;
     auto out = rtk::gl::create_texture(
@@ -210,21 +213,14 @@ auto light_pass(render_ctx& ctx, point_light& l)
 
     for (auto& obj : ctx.objects)
     {
-        std::cout << "shadow " << obj.name << '\n';
         shader->set_variable("model", obj.transform->get_world_mat4());
         obj.mesh->draw(*shader);
     }
 
-    auto dep = read_depth(*out);
-
-    cv::Mat m(dep.m_height, dep.m_width, CV_32FC1, dep.m_data);
-    cv::imshow("asd", m);
-    cv::waitKey(0);
-
     return out;
 }
 
-void render_one(rtk::camera& cam, render_ctx& ctx, renderable& obj)
+void render_one(const rtk::camera& cam, const render_ctx& ctx, const renderable& obj)
 {
     auto mat = obj.mat.get();
     auto& shader = mat->go();
@@ -266,13 +262,27 @@ void render(rtk::camera& cam, render_ctx& ctx)
     }
 }
 
+void init_imgui(rtk::window& win)
+{
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    ImGui_ImplGlfwGL3_Init(win.get(), true);
+
+    ImGui::StyleColorsDark();
+    auto& style = ImGui::GetStyle();
+    style.WindowBorderSize = 0;
+    style.WindowRounding = 0;
+}
+
 int main() {
     rtk::rtk_init init;
 
     using namespace rtk::literals;
     using namespace std::chrono_literals;
 
-    rtk::window w({1920_px, 1200_px});
+    rtk::window w({1920_px, 1080_px});
+    init_imgui(w);
 
     auto meshes = rtk::assets::load_meshes("../assets/teapot.obj");
 
@@ -307,7 +317,7 @@ int main() {
 
     point_light pl;
     pl.color = glm::vec3{ 200, 20, 20 } / 4.f;
-    pl.transform.set_position({ -1, 2, 0 });
+    pl.transform.set_position({ -5, 5, 0 });
     pl.transform.look_at(teapot.transform->get_pos());
 
     render_ctx ctx;
@@ -324,10 +334,18 @@ int main() {
     while (!w.should_close())
     {
         auto beg = clk::now();
+        ImGui_ImplGlfwGL3_NewFrame();
+
         w.begin_draw();
 
         auto out = light_pass(ctx, ctx.lights[0]);
         ctx.sms[0] = out;
+
+        ImGui::Begin("About");
+        ImGui::SetWindowPos(ImVec2{300, 300}, ImGuiCond_Once);
+        ImGui::SetWindowSize(ImVec2{300, 320});
+        ImGui::ImageButton((void*)out->get_id(), ImVec2(280, 280), ImVec2(0, 0), ImVec2(1, 1), 0);
+        ImGui::End();
 
         rtk::gl::reset_framebuffer();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -336,11 +354,13 @@ int main() {
 
         render(cc.get_camera(), ctx);
 
+        glViewport(0, 0, w.get_resolution().width, w.get_resolution().height);
+        ImGui::Render();
+        ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
+
         w.end_draw();
 
-        while (true);
         auto dur = std::chrono::duration_cast<std::chrono::microseconds>(clk::now() - beg);
-        std::cout << dur.count() << '\n';
         std::this_thread::sleep_for(10ms - dt);
         dt = 10ms;
     }

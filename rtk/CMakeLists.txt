@@ -12,12 +12,6 @@ find_package(Boost REQUIRED COMPONENTS system)
 find_package(assimp REQUIRED)
 find_package(GLM REQUIRED)
 
-if(CMAKE_BUILD_TYPE MATCHES "Debug")
-    set(GLAD_FILES ../glad_debug/src/glad.c)
-else()
-    set(GLAD_FILES ../glad/src/glad.c)
-endif()
-
 set(HEADER_PATH "${CMAKE_CURRENT_SOURCE_DIR}/include/rtk")
 
 set(HEADER_FILES
@@ -49,18 +43,18 @@ set(SOURCE_FILES src/window.cpp src/rtk_init.cpp src/display.cpp
         src/geometry/path.cpp src/gl/path.cpp src/mesh_ops.cpp src/camera.cpp src/utility.cpp
         src/texture/tex2d.cpp src/framebuffer.cpp src/physics/transform.cpp)
 
-add_library(glad SHARED ${GLAD_FILES})
-
 add_library(rtk SHARED ${SOURCE_FILES} ${HEADER_FILES})
 
 target_compile_definitions(rtk PUBLIC GLFW_INCLUDE_NONE=1)
 
-if(CMAKE_BUILD_TYPE MATCHES "Debug")
+if(${CMAKE_BUILD_TYPE} MATCHES "Debug")
     target_compile_definitions(rtk PUBLIC RTK_DEBUG)
-    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../glad_debug/include/" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/include/")
+    message(STATUS "Glad Debug")
 else()
-    file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/../glad/include/" DESTINATION "${CMAKE_CURRENT_SOURCE_DIR}/include/")
+    message(STATUS "Glad Release")
 endif()
+
+target_include_directories(rtk PUBLIC "include")
 
 target_compile_definitions(rtk PUBLIC GLM_ENABLE_EXPERIMENTAL)
 target_compile_definitions(rtk PUBLIC RTK_NAMESPACE=rtk)
@@ -82,6 +76,7 @@ target_include_directories(rtk PUBLIC ${assimp_INCLUDE_DIRS})
 set_target_properties(rtk PROPERTIES CXX_VISIBILITY_PRESET hidden)
 set_target_properties(rtk PROPERTIES C_VISIBILITY_PRESET hidden)
 
+#[[
 set(INCLUDE_DEST "include")
 set(LIB_DEST "lib/rtk")
 
@@ -105,3 +100,4 @@ install(EXPORT rtk DESTINATION "${LIB_DEST}")
 install(DIRECTORY ${HEADER_PATH} DESTINATION "${INCLUDE_DEST}")
 install(DIRECTORY ${HEADER_PATH}/../glad DESTINATION "${INCLUDE_DEST}")
 install(DIRECTORY ${HEADER_PATH}/../KHR DESTINATION "${INCLUDE_DEST}")
+]]

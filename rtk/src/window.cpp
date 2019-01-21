@@ -49,12 +49,7 @@ namespace rtk {
 
         assert(m_wnd);
 
-        int width, height;
-        glfwGetFramebufferSize(m_wnd, &width, &height);
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LESS);
-
-        glViewport(0, 0, width, height);
+        set_viewport();
     }
 
     void window::begin_draw()
@@ -106,12 +101,7 @@ namespace rtk {
 
         assert(m_wnd);
 
-        int width, height;
-        glfwGetFramebufferSize(m_wnd, &width, &height);
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LESS);
-
-        glViewport(0, 0, width, height);
+        set_viewport();
     }
 
     static std::map<GLFWwindow*, window> windows;
@@ -166,6 +156,16 @@ namespace rtk {
     {
         use();
         glfwSwapInterval(on ? 1 : 0);
+    }
+
+    void window::set_viewport()
+    {
+        int width, height;
+        glfwGetFramebufferSize(m_wnd, &width, &height);
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
+
+        glViewport(0, 0, width, height);
     }
 
     void window::use() const
