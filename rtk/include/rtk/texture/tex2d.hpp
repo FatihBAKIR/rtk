@@ -104,22 +104,37 @@ namespace RTK_NAMESPACE {
             int wrap_mode;
             int filter_mode;
 
-            texture2d() = default;
-
-            friend texture2d create_texture(rtk::resolution, graphics::pixel_format);
+            friend std::shared_ptr<texture2d> create_texture(rtk::resolution, graphics::pixel_format);
             friend class framebuffer;
             friend RTK_PUBLIC graphics::unsafe_texture read_depth(const texture2d&);
 
         public:
-            texture2d(const graphics::unsafe_texture& tex);
+            texture2d() = default;
+
+            explicit texture2d(const graphics::unsafe_texture& tex);
+
+            texture2d(texture2d&& rhs) noexcept
+            {
+                m_width = rhs.m_width;
+                m_height = rhs.m_height;
+                m_texture_id = std::exchange(rhs.m_texture_id, 0);
+                m_fmt = rhs.m_fmt;
+                wrap_mode = rhs.wrap_mode;
+                filter_mode = rhs.filter_mode;
+            }
+
+            texture2d(const texture2d&) = delete;
+
             ~texture2d();
 
             void activate(int tex_id) const;
 
+            auto get_id() const { return m_texture_id; }
+
             rtk::resolution get_resolution() const;
         };
 
-        RTK_PUBLIC texture2d create_texture(rtk::resolution, graphics::pixel_format);
+        RTK_PUBLIC std::shared_ptr<texture2d> create_texture(rtk::resolution, graphics::pixel_format);
 
     }
 }

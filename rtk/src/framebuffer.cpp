@@ -28,7 +28,8 @@ namespace gl
 
     framebuffer::~framebuffer()
     {
-        glDeleteFramebuffers(1, &m_fb_id);
+        if (m_fb_id != 0)
+            glDeleteFramebuffers(1, &m_fb_id);
     }
 
     void framebuffer::activate() const
@@ -42,6 +43,7 @@ namespace gl
         glBindFramebuffer(GL_FRAMEBUFFER, m_fb_id);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_render_to->m_texture_id, 0);
     }
+
     void reset_framebuffer()
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);

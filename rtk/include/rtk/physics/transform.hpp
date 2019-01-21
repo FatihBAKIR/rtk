@@ -18,6 +18,15 @@ namespace rtk
         world
     };
 
+    struct vectors
+    {
+        static inline const glm::vec3 left {1, 0, 0};
+        static inline const glm::vec3 right = -left;
+
+        static inline const glm::vec3 forward {0, 0, 1};
+        static inline const glm::vec3 back = -forward;
+    };
+
     class RTK_PUBLIC transform : public std::enable_shared_from_this<transform>
     {
     public:

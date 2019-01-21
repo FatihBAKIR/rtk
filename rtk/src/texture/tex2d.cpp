@@ -86,7 +86,10 @@ namespace RTK_NAMESPACE {
     {
         texture2d::~texture2d()
         {
-            glDeleteTextures(1, &m_texture_id);
+            if (m_texture_id != 0)
+            {
+                glDeleteTextures(1, &m_texture_id);
+            }
         }
 
         void texture2d::activate(int tex_id) const
@@ -149,21 +152,21 @@ namespace RTK_NAMESPACE {
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         }
 
-        texture2d create_texture(rtk::resolution r, graphics::pixel_format fmt)
+        std::shared_ptr<texture2d> create_texture(rtk::resolution r, graphics::pixel_format fmt)
         {
-            texture2d res;
-            res.m_width = r.width;
-            res.m_height = r.height;
-            res.m_fmt = fmt;
+            auto res = std::make_shared<texture2d>();
+            res->m_width = r.width;
+            res->m_height = r.height;
+            res->m_fmt = fmt;
 
             glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-            glGenTextures(1, &res.m_texture_id);
-            glBindTexture(GL_TEXTURE_2D, res.m_texture_id);
+            glGenTextures(1, &res->m_texture_id);
+            glBindTexture(GL_TEXTURE_2D, res->m_texture_id);
 
             auto gl_t = to_gl_type(fmt);
 
-            glTexImage2D(GL_TEXTURE_2D, 0, gl_t.internal, res.m_width, res.m_height, 0, gl_t.format, gl_t.type, nullptr);
+            glTexImage2D(GL_TEXTURE_2D, 0, gl_t.internal, res->m_width, res->m_height, 0, gl_t.format, gl_t.type, nullptr);
 
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -179,7 +182,8 @@ namespace RTK_NAMESPACE {
             t.m_height = tex.get_resolution().height;
             t.m_data = new float[t.m_height * t.m_width];
             t.m_fmt = graphics::pixel_format::gl_depth16;
-            glReadPixels(0, 0, 1024, 1024, GL_DEPTH_COMPONENT, GL_FLOAT, t.m_data);
+            tex.activate(0);
+            glReadPixels(0, 0, t.m_width, t.m_height, GL_DEPTH_COMPONENT, GL_FLOAT, t.m_data);
             return t;
         }
     }

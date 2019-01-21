@@ -10,4 +10,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_executable(renderer tests/main.cpp)
 
-target_link_libraries(renderer PUBLIC rtk)
+find_package(OpenCV REQUIRED)
+
+target_include_directories(renderer PUBLIC ${OpenCV_INCLUDE_DIRS})
+target_link_libraries(renderer PUBLIC rtk ${OpenCV_LIBS})

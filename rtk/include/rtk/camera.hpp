@@ -33,15 +33,27 @@ namespace RTK_NAMESPACE
         glm::vec2 m_viewport_pos = {0.f, 0.f};
         glm::vec2 m_viewport_size = {1.f, 1.f};
 
-        rtk::window* display;
+        rtk::window* display = nullptr;
 
-        const rtk::gl::framebuffer* m_fb;
+        const rtk::gl::framebuffer* m_fb = nullptr;
 
     public:
+        camera(rtk::window& w)
+            : m_trans{std::make_shared<rtk::transform>()}, display{&w}
+        {
+            reset_aspect_ratio();
+        }
+
+        const std::shared_ptr<rtk::transform>& get_transform() const {
+            return m_trans;
+        }
+
         void set_display(rtk::window& d)
         {
             display = &d;
+            reset_aspect_ratio();
         }
+
         void sync();
 
         glm::mat4& get_vp_matrix();
