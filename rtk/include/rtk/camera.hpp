@@ -38,7 +38,7 @@ namespace RTK_NAMESPACE
         const rtk::gl::framebuffer* m_fb = nullptr;
 
     public:
-        camera(rtk::window& w)
+        explicit camera(rtk::window& w)
             : m_trans{std::make_shared<rtk::transform>()}, display{&w}
         {
             reset_aspect_ratio();

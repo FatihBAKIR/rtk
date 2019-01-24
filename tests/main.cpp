@@ -94,6 +94,7 @@ public:
     cam_controller(std::unique_ptr<rtk::camera> cam, rtk::window& w)
         : m_win{&w}, m_cam(std::move(cam))
     {
+        //m_cam->get_transform()->translate(rtk::vectors::up * 5.f);
         m_cam->get_transform()->translate(rtk::vectors::back * 2.f);
     }
 
@@ -191,14 +192,18 @@ auto light_pass(const scene& ctx, const spot_light& l)
 
     static auto shader = get_shadow_shader();
 
-    const glm::mat4 dpm = glm::ortho<float>(-5, 5, -5, 5, 0.1f, 10.f);
+    const glm::mat4 dpm = glm::ortho<float>(-2, 2, -2, 2, 0.1f, 10.f);
+    //const glm::mat4 dpm = glm::perspective<float>(0.785398, 1, 0.1f, 10.f);
 
     auto& trans = l.transform;
     auto pos = trans->get_pos();
-    auto dvm = glm::lookAt(
+    auto fwd = trans->get_forward();
+    auto up = trans->get_up();
+
+    const auto dvm = glm::lookAt(
             pos,
-            pos + trans->get_forward(),
-            trans->get_up());
+            pos + fwd,
+            up);
 
     const auto mvp = dpm * dvm;
 
@@ -315,7 +320,7 @@ int main(int argc, char** argv) {
 
     rtk::rtk_init init;
 
-    rtk::window w({1920_px, 1080_px});
+    rtk::window w({1800_px, 1200_px});
     init_imgui(w);
 
     std::vector<rtk::gl::mesh> gl_meshes;
@@ -337,7 +342,7 @@ int main(int argc, char** argv) {
     mat->ambient = {1, 1, 1};
     mat->diffuse = {1, 1, 1};
     mat->specular = {1, 1, 1};
-    mat->phong_exponent = 1.f;
+    mat->phong_exponent = 16.f;
 
     renderable teapot{};
     teapot.name = "teapot";
@@ -366,7 +371,10 @@ int main(int argc, char** argv) {
 
     renderable ground{};
     ground.name = "ground 2";
-    ground.mat = mat;
+    ground.mat = mat->clone();
+    auto ground_mat = dynamic_cast<phong_material*>(ground.mat.get());
+    ground_mat->phong_exponent = 1;
+    ground_mat->ambient = glm::vec3{2, 2, 2};
     ground.mesh = &gl_meshes[1];
     ground.cast_shadow = false;
 
@@ -390,16 +398,17 @@ int main(int argc, char** argv) {
     pl2.transform->set_parent(lights_p);
     pl3.transform->set_parent(lights_p);
 
+    cam_controller cc{std::make_unique<rtk::camera>(w), w};
+
     scene ctx;
     ctx.objects.push_back(teapot);
     ctx.objects.push_back(ground);
     ctx.objects.push_back(bounds);
     ctx.lights.push_back(pl);
     ctx.lights.push_back(pl2);
+    //pl3.transform = cc.get_camera().get_transform();
     ctx.lights.push_back(pl3);
     ctx.ambient = ambient_light{ glm::vec3{ .1, .1, .1 } };
-
-    cam_controller cc{std::make_unique<rtk::camera>(w), w};
 
     using namespace std::chrono_literals;
     using clk = std::chrono::system_clock;
@@ -414,8 +423,6 @@ int main(int argc, char** argv) {
         if (w.get_key_down(GLFW_KEY_L))
         {
             lights_p->rotate(glm::vec3{0, 1, 0});
-            auto pos = ctx.lights[0].transform->get_pos();
-            std::cout << pos.x << ", " << pos.y << ", " << pos.z << '\n';
         }
 
         w.begin_draw();
@@ -425,9 +432,19 @@ int main(int argc, char** argv) {
 
         render(cc.get_camera(), ctx);
 
-        ImGui::Begin("About");
+        ImGui::Begin("Info");
         ImGui::Text("FPS: %d", int(1000 / (dt.count() / 1'000.f)));
-        ImGui::ImageButton((void*)sm->get_id(), ImVec2{256,256});
+        ImGui::End();
+
+        ImGui::Begin("Shadow map of light 3");
+        ImGui::Image((void*)sm->get_id(), ImVec2{256,256});
+        ImGui::End();
+
+        ImGui::Begin("Material");
+        ImGui::ColorPicker3("Diffuse",
+                dynamic_cast<phong_material*>(teapot.mat.get())->diffuse.data.data);
+        ImGui::ColorPicker3("Specular",
+                dynamic_cast<phong_material*>(teapot.mat.get())->specular.data.data);
         ImGui::End();
 
         ImGui::Render();

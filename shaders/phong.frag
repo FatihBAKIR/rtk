@@ -97,8 +97,8 @@ void main()
             visible(i);
     }
 
-    vec3 to_light = -directional_light.direction;
-    color += computeReflectance(material, to_light, vec3(world_normal), to_eye) * computeRadianceDirectionalLight(directional_light);
+    //vec3 to_light = -directional_light.direction;
+    //color += computeReflectance(material, to_light, vec3(world_normal), to_eye) * computeRadianceDirectionalLight(directional_light);
 
 	final_color = vec4(color, 1.0f);
 }

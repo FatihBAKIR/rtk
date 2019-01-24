@@ -26,8 +26,8 @@ void main()
     world_position = model * vec4(position, 1.0);
     for (int i = 0; i < number_of_point_lights; ++i)
     {
-        light_pos[i] = point_light[i].transform * model * vec4(position, 1.0);
+        light_pos[i] = point_light[i].transform * world_position;
     }
     world_normal = vec4(normalize(vec3(transpose(inverse(model)) * vec4(normal, 0.0f))), 0);
-	gl_Position = vp * model * vec4(position, 1.0);
+	gl_Position = vp * world_position;
 }
