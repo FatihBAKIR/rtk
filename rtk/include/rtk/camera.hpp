@@ -80,6 +80,8 @@ namespace RTK_NAMESPACE
             m_trans = std::move(trans);
         }
 
+        rtk::resolution get_resolution() const;
+
     private:
 
         std::shared_ptr<rtk::transform> m_trans;

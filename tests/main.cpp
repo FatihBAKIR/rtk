@@ -1,129 +1,26 @@
 #include <iostream>
-
-#include <rtk/graphics/units.hpp>
-#include <rtk/graphics/size.hpp>
-#include <rtk/rtk_init.hpp>
-#include <rtk/window.hpp>
-
-#include <rtk/gl/shader.hpp>
-#include <rtk/geometry/mesh.hpp>
-#include <rtk/geometry/path.hpp>
-#include <fstream>
-#include <rtk/gl/program.hpp>
-#include <thread>
-
-#include <rtk/asset/mesh_import.hpp>
-#include <rtk/gl/path.hpp>
-#include <rtk/gl/mesh.hpp>
-#include <rtk/mesh_ops.hpp>
-#include <glm/gtx/transform.hpp>
-#include <rtk/physics/transform.hpp>
-#include <rtk/camera.hpp>
-#include <rtk/texture/tex2d.hpp>
+#include <chrono>
 
 #include <rtk/imgui.h>
+#include <rtk/geometry/mesh.hpp>
+#include <rtk/rtk_init.hpp>
+#include <rtk/asset/mesh_import.hpp>
+#include <rtk/mesh_ops.hpp>
+#include <rtk/texture/tex2d.hpp>
+
+#include "material.hpp"
+#include "lighting.hpp"
+#include "scene.hpp"
+#include "shader_man.hpp"
+#include "cam_controller.hpp"
 #include "imgui_glfw.hpp"
 
-std::string read_text_file(const std::string& path)
+static std::shared_ptr<rtk::gl::program> get_phong_shader()
 {
-    std::ifstream f(path);
-    return {std::istreambuf_iterator<char>(f), std::istreambuf_iterator<char>()};
+    return app::load_shader("../shaders/phong.vert", "../shaders/phong.frag");
 }
 
-std::shared_ptr<rtk::gl::program> load_shader(const std::string& vert, const std::string frag)
-{
-    static std::map<std::pair<std::string, std::string>, std::weak_ptr<rtk::gl::program>> cache;
-    auto key = make_pair(vert, frag);
-    if (auto it = cache.find(key); it != cache.end())
-    {
-        if (auto ptr = it->second.lock(); !ptr)
-        {
-            cache.erase(it);
-        }
-        else
-        {
-            return ptr;
-        }
-    }
-
-    rtk::gl::vertex_shader mesh_vs { read_text_file(vert).c_str() };
-    rtk::gl::fragment_shader mesh_fs { read_text_file(frag).c_str() };
-
-    auto mesh_shader = std::make_shared<rtk::gl::program>();
-    mesh_shader->attach(mesh_vs);
-    mesh_shader->attach(mesh_fs);
-    mesh_shader->link();
-
-    cache[key] = mesh_shader;
-    return mesh_shader;
-}
-
-std::shared_ptr<rtk::gl::program> get_phong_shader()
-{
-    return load_shader("../shaders/phong.vert", "../shaders/phong.frag");
-}
-
-std::shared_ptr<rtk::gl::program> get_shadow_shader()
-{
-    return load_shader("../shaders/shadow.vert", "../shaders/shadow.frag");
-}
-
-class cam_controller
-{
-public:
-    void pre_render(float dt)
-    {
-        auto camera_trans = m_cam->get_transform().get();
-        glm::vec3 movement{};
-        if (m_win->get_key_down(GLFW_KEY_S)) movement += rtk::vectors::back;
-        if (m_win->get_key_down(GLFW_KEY_W)) movement += rtk::vectors::forward;
-        if (m_win->get_key_down(GLFW_KEY_A)) movement += rtk::vectors::left * 2.f;
-        if (m_win->get_key_down(GLFW_KEY_D)) movement += rtk::vectors::right * 2.f;
-        normalize(movement);
-        movement *= m_speed * dt;
-        camera_trans->translate(movement);
-        camera_trans->look_at({0,0,0});
-        m_cam->sync();
-    }
-
-    void set_speed(float s)
-    {
-        m_speed = s;
-    }
-
-    cam_controller(std::unique_ptr<rtk::camera> cam, rtk::window& w)
-        : m_win{&w}, m_cam(std::move(cam))
-    {
-        //m_cam->get_transform()->translate(rtk::vectors::up * 5.f);
-        m_cam->get_transform()->translate(rtk::vectors::back * 2.f);
-    }
-
-    rtk::camera& get_camera() const
-    {
-        return *m_cam;
-    }
-
-private:
-    float m_speed = 1;
-    rtk::window* m_win;
-    std::unique_ptr<rtk::camera> m_cam;
-};
-
-struct spot_light
-{
-    glm::vec3 color;
-    std::shared_ptr<rtk::transform> transform = std::make_shared<rtk::transform>();
-};
-
-struct material
-{
-public:
-    virtual rtk::gl::program& go() = 0;
-    virtual std::unique_ptr<material> clone() const = 0;
-    virtual ~material() = default;
-};
-
-struct phong_material : material
+struct phong_material : app::material
 {
     rtk::gl::program& go() override
     {
@@ -148,180 +45,75 @@ struct phong_material : material
     std::shared_ptr<rtk::gl::program> shader;
 };
 
-struct renderable
+auto get_phong_mat()
 {
-    std::string name;
-    rtk::gl::mesh* mesh;
-    std::shared_ptr<rtk::transform> transform = std::make_shared<rtk::transform>();
-    std::shared_ptr<material> mat;
-    bool wire = false;
-    bool cast_shadow = true;
-};
-
-struct ambient_light
-{
-    glm::vec3 ambient;
-};
-
-struct scene
-{
-    std::vector<renderable> objects;
-    std::vector<spot_light> lights;
-    ambient_light ambient;
-};
-
-void apply(rtk::gl::program& p, const std::string& base, const spot_light& pl)
-{
-    p.set_variable(base + ".intensity", pl.color);
-    p.set_variable(base + ".position", pl.transform->get_pos());
+    auto mat = std::make_shared<phong_material>();
+    mat->shader = get_phong_shader();
+    mat->ambient = {1, 1, 1};
+    mat->diffuse = {1, 1, 1};
+    mat->specular = {1, 1, 1};
+    mat->phong_exponent = 16.f;
+    return mat;
 }
 
-void apply(rtk::gl::program& p, const ambient_light& al)
+auto get_ground(const std::shared_ptr<phong_material>& mat, const rtk::gl::mesh& mesh)
 {
-    p.set_variable("ambient_light", al.ambient);
+    app::renderable ground{};
+    ground.name = "ground 2";
+    ground.mat = mat->clone();
+    auto ground_mat = dynamic_cast<phong_material*>(ground.mat.get());
+    ground_mat->phong_exponent = 1;
+    ground_mat->ambient = glm::vec3{2, 2, 2};
+    ground.mesh = &mesh;
+    ground.cast_shadow = false;
+
+    ground.transform->translate(rtk::vectors::down * 0.5f);
+    ground.transform->rotate({-90, 0, 0});
+    ground.transform->set_scale({25, 25, 1});
+    return ground;
 }
 
-auto light_pass(const scene& ctx, const spot_light& l)
-{
-    using namespace rtk::literals;
-    auto out = rtk::gl::create_texture(
-            rtk::resolution(4096_px, 4096_px),
-            rtk::graphics::pixel_format::gl_depth16);
-    out->activate(0);
-    rtk::gl::framebuffer shadow_buf(*out);
+namespace app {
+    std::shared_ptr<rtk::gl::texture2d>
+    render_to_tex(const rtk::camera &cam, const scene &ctx);
 
-    static auto shader = get_shadow_shader();
+    std::shared_ptr<rtk::gl::texture2d>
+    geometry_pass(const rtk::camera &cam, const scene &ctx);
 
-    const glm::mat4 dpm = glm::ortho<float>(-2, 2, -2, 2, 0.1f, 10.f);
-    //const glm::mat4 dpm = glm::perspective<float>(0.785398, 1, 0.1f, 10.f);
+    std::shared_ptr<rtk::gl::texture2d>
+    object_pass(const rtk::camera &cam, const scene &ctx);
 
-    auto& trans = l.transform;
-    auto pos = trans->get_pos();
-    auto fwd = trans->get_forward();
-    auto up = trans->get_up();
+    std::shared_ptr<rtk::gl::texture2d>
+    visualize_depth(const std::shared_ptr<rtk::gl::texture2d>& depth);
 
-    const auto dvm = glm::lookAt(
-            pos,
-            pos + fwd,
-            up);
+    std::shared_ptr<rtk::gl::texture2d>
+    detect_edges(const std::shared_ptr<rtk::gl::texture2d>& depth);
 
-    const auto mvp = dpm * dvm;
+    std::shared_ptr<rtk::gl::texture2d>
+    render_tex(const std::shared_ptr<rtk::gl::texture2d>& depth);
+    
 
-    shader->set_variable("vp", mvp);
-    shadow_buf.activate_depth();
-    shadow_buf.set_viewport();
+    std::shared_ptr<rtk::gl::texture2d>
+    thicker(const std::shared_ptr<rtk::gl::texture2d>& depth);
 
-    glDrawBuffer(GL_NONE);
-    glReadBuffer(GL_NONE);
-    glClear(GL_DEPTH_BUFFER_BIT);
-
-    for (auto& obj : ctx.objects)
-    {
-        if (!obj.cast_shadow)
-        {
-            continue;
-        }
-        shader->set_variable("model", obj.transform->get_world_mat4());
-        obj.mesh->draw(*shader);
-    }
-
-    return make_pair(out, mvp);
-}
-
-struct shadow_ctx
-{
-    std::vector<std::shared_ptr<rtk::gl::texture2d>> sms;
-    std::vector<glm::mat4> light_transforms;
-};
-
-void render_one(
-        const rtk::camera& cam,
-        const scene& ctx,
-        const shadow_ctx& shadow,
-        const renderable& obj)
-{
-    auto mat = obj.mat.get();
-    auto& shader = mat->go();
-
-    shader.set_variable("camera_position", cam.get_transform()->get_pos());
-    shader.set_variable("vp", cam.get_vp_matrix());
-    shader.set_variable("model", obj.transform->get_world_mat4());
-
-    int pl_num = 0;
-    for (auto& pl : ctx.lights)
-    {
-        apply(shader, "point_light[" + std::to_string(pl_num) + "]", pl);
-
-        shader.set_variable("point_light[" + std::to_string(pl_num) + "].shadowTex", pl_num, *shadow.sms[pl_num]);
-        shader.set_variable("point_light[" + std::to_string(pl_num) + "].transform", shadow.light_transforms[pl_num]);
-
-        pl_num++;
-    }
-
-    shader.set_variable("number_of_point_lights", pl_num);
-
-    apply(shader, ctx.ambient);
-
-    cam.activate();
-    if (obj.wire)
-    {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    }
-    obj.mesh->draw(shader);
-    if (obj.wire)
-    {
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    }
-}
-
-std::shared_ptr<rtk::gl::texture2d> sm;
-void render(const rtk::camera& cam, const scene& ctx)
-{
-    shadow_ctx shadow;
-
-    glCullFace(GL_FRONT);
-    for (auto& light : ctx.lights)
-    {
-        auto [out, vp] = light_pass(ctx, light);
-        shadow.sms.push_back(out);
-        shadow.light_transforms.push_back(vp);
-        sm = out;
-    }
-    glCullFace(GL_BACK);
-
-    rtk::gl::reset_framebuffer();
-
-    for (auto& obj : ctx.objects)
-    {
-        render_one(cam, ctx, shadow, obj);
-    }
-}
-
-void init_imgui(rtk::window& win)
-{
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-    ImGui_ImplGlfwGL3_Init(win.get(), true);
-
-    ImGui::StyleColorsDark();
-    auto& style = ImGui::GetStyle();
-    style.WindowBorderSize = 0;
-    style.WindowRounding = 0;
+    std::shared_ptr<rtk::gl::texture2d>
+    contour(const std::shared_ptr<rtk::gl::texture2d>& edges, const std::shared_ptr<rtk::gl::texture2d>& scene);
 }
 
 int main(int argc, char** argv) {
     using namespace rtk::literals;
     using namespace std::chrono_literals;
-
-    std::cout << "loading mesh from " << argv[1] << '\n';
-    auto meshes = rtk::assets::load_meshes(argv[1]);
-    meshes.push_back(rtk::geometry::primitive::cube());
+    using namespace app;
 
     rtk::rtk_init init;
 
     rtk::window w({1800_px, 1200_px});
     init_imgui(w);
+
+    std::cout << "loading mesh from " << argv[1] << '\n';
+    auto meshes = rtk::assets::load_meshes(argv[1]);
+    meshes.push_back(rtk::geometry::primitive::cube());
+    meshes.push_back(rtk::geometry::primitive::quad());
 
     std::vector<rtk::gl::mesh> gl_meshes;
     gl_meshes.reserve(meshes.size());
@@ -337,12 +129,7 @@ int main(int argc, char** argv) {
     auto& mesh = meshes[0];
     auto max = std::max({mesh.get_bbox().extent.x, mesh.get_bbox().extent.y, mesh.get_bbox().extent.z});
 
-    auto mat = std::make_shared<phong_material>();
-    mat->shader = get_phong_shader();
-    mat->ambient = {1, 1, 1};
-    mat->diffuse = {1, 1, 1};
-    mat->specular = {1, 1, 1};
-    mat->phong_exponent = 16.f;
+    auto mat = get_phong_mat();
 
     renderable teapot{};
     teapot.name = "teapot";
@@ -369,17 +156,7 @@ int main(int argc, char** argv) {
 
     teapot.transform->translate(rtk::vectors::down * (1 - scaled.y) * 0.5f);
 
-    renderable ground{};
-    ground.name = "ground 2";
-    ground.mat = mat->clone();
-    auto ground_mat = dynamic_cast<phong_material*>(ground.mat.get());
-    ground_mat->phong_exponent = 1;
-    ground_mat->ambient = glm::vec3{2, 2, 2};
-    ground.mesh = &gl_meshes[1];
-    ground.cast_shadow = false;
-
-    ground.transform->translate(rtk::vectors::down);
-    ground.transform->set_scale({25, 1, 25});
+    auto ground = get_ground(mat, gl_meshes[2]);
 
     spot_light pl;
     pl.color = glm::vec3{ 25, 0, 0 };
@@ -404,9 +181,9 @@ int main(int argc, char** argv) {
     ctx.objects.push_back(teapot);
     ctx.objects.push_back(ground);
     ctx.objects.push_back(bounds);
+
     ctx.lights.push_back(pl);
     ctx.lights.push_back(pl2);
-    //pl3.transform = cc.get_camera().get_transform();
     ctx.lights.push_back(pl3);
     ctx.ambient = ambient_light{ glm::vec3{ .1, .1, .1 } };
 
@@ -425,19 +202,29 @@ int main(int argc, char** argv) {
             lights_p->rotate(glm::vec3{0, 1, 0});
         }
 
+        auto obj_im = object_pass(cc.get_camera(), ctx);
+        auto edges = detect_edges(obj_im);
+        auto thicker = app::thicker(edges);
+        auto thicker2 = app::thicker(thicker);
+        auto thicker3 = app::thicker(thicker2);
+        auto obj_v = visualize_depth(thicker3);
+
+        auto out = render_to_tex(cc.get_camera(), ctx);
+
+        auto fin = contour(thicker3, out);
+
+        //auto im = geometry_pass(cc.get_camera(), ctx);
+        //auto bet = visualize_depth(im);
+
         w.begin_draw();
         w.set_viewport();
 
         cc.pre_render(dt.count() / 1'000'000.f);
 
-        render(cc.get_camera(), ctx);
+        //render(cc.get_camera(), ctx);
 
         ImGui::Begin("Info");
         ImGui::Text("FPS: %d", int(1000 / (dt.count() / 1'000.f)));
-        ImGui::End();
-
-        ImGui::Begin("Shadow map of light 3");
-        ImGui::Image((void*)sm->get_id(), ImVec2{256,256});
         ImGui::End();
 
         ImGui::Begin("Material");
@@ -445,6 +232,11 @@ int main(int argc, char** argv) {
                 dynamic_cast<phong_material*>(teapot.mat.get())->diffuse.data.data);
         ImGui::ColorPicker3("Specular",
                 dynamic_cast<phong_material*>(teapot.mat.get())->specular.data.data);
+        ImGui::End();
+
+        ImGui::Begin("Shadow map of light 3");
+        //ImGui::Image((void*)bet->get_id(), ImVec2{450,300});
+        ImGui::Image((void*)fin->get_id(), ImVec2{900,600});
         ImGui::End();
 
         ImGui::Render();

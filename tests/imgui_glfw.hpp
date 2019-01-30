@@ -1,6 +1,7 @@
 #pragma once
 
 #include <rtk/imgui.h>
+#include <rtk/window.hpp>
 
 struct GLFWwindow;
 
@@ -20,3 +21,4 @@ IMGUI_API void        ImGui_ImplGlfw_MouseButtonCallback(GLFWwindow* window, int
 IMGUI_API void        ImGui_ImplGlfw_ScrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 IMGUI_API void        ImGui_ImplGlfw_KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods);
 IMGUI_API void ImGui_ImplGlfw_CharCallback(GLFWwindow* window, unsigned int c);
+void init_imgui(rtk::window& win);

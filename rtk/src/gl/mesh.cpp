@@ -47,7 +47,7 @@ namespace RTK_NAMESPACE {
             verts_len = rhs.verts_len;
         }
 
-        void mesh::draw(const gl::program &shader) {
+        void mesh::draw(const gl::program &shader) const {
             shader.use();
             glBindVertexArray(m_vao_id);
             glDrawElements(GL_TRIANGLES, faces_len, GL_UNSIGNED_INT, 0);

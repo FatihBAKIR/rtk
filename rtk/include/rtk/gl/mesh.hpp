@@ -86,7 +86,7 @@ namespace RTK_NAMESPACE {
             template <class T>
             void add_vertex_data(GLuint layout_id, gsl::span<const T>);
 
-            void draw(const gl::program& shader);
+            void draw(const gl::program& shader) const;
 
             void swap(mesh&& rhs);
             friend void swap(mesh&& a, mesh&& b)

@@ -15,6 +15,6 @@ endif()
 set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-add_executable(renderer tests/main.cpp tests/imgui_glfw.hpp tests/imgui_glfw.cpp)
+add_executable(renderer tests/main.cpp tests/imgui_glfw.hpp tests/imgui_glfw.cpp tests/material.hpp tests/lighting.hpp tests/renderable.hpp tests/scene.hpp tests/lighting.cpp tests/cam_controller.hpp tests/shader_man.hpp tests/shader_man.cpp tests/cam_controller.cpp tests/renderer.cpp)
 
 target_link_libraries(renderer PUBLIC rtk imgui)

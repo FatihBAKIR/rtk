@@ -11,6 +11,7 @@
 #include <glad/glad.h>
 #include <gsl/span>
 #include <rtk/graphics/size.hpp>
+#include <rtk/gl/gl_resource.hpp>
 
 namespace RTK_NAMESPACE {
     namespace graphics {
@@ -99,6 +100,8 @@ namespace RTK_NAMESPACE {
         {
             uint16_t m_width, m_height;
             GLuint m_texture_id;
+
+            //tex_id m_tex_id;
 
             graphics::pixel_format m_fmt;
             int wrap_mode;

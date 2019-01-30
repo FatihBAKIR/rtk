@@ -434,3 +434,17 @@ void ImGui_ImplGlfwGL3_NewFrame()
 
     ImGui::NewFrame();
 }
+
+#include <rtk/window.hpp>
+void init_imgui(rtk::window& win)
+{
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO();
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    ImGui_ImplGlfwGL3_Init(win.get(), true);
+
+    ImGui::StyleColorsDark();
+    auto& style = ImGui::GetStyle();
+    style.WindowBorderSize = 0;
+    style.WindowRounding = 0;
+}

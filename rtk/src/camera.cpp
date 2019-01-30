@@ -93,4 +93,8 @@ namespace rtk
     {
         m_fb = &fb;
     }
+
+    rtk::resolution camera::get_resolution() const {
+        return display->get_resolution();
+    }
 }

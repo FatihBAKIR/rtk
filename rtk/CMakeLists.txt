@@ -36,7 +36,7 @@ set(HEADER_FILES
         ${HEADER_PATH}/utility.hpp
         ${HEADER_PATH}/texture/tex2d.hpp
         ${HEADER_PATH}/framebuffer.hpp
-        include/rtk/physics/transform.hpp)
+        include/rtk/physics/transform.hpp include/rtk/gl/gl_resource.hpp)
 
 set(SOURCE_FILES src/window.cpp src/rtk_init.cpp src/display.cpp
         src/geometry/mesh.cpp src/gl/program.cpp src/asset/mesh_import.cpp src/gl/mesh.cpp

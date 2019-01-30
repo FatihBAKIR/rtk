@@ -58,6 +58,33 @@ namespace geometry
         bbox = physics::from_min_max(min, max);
     }
 
+    mesh primitive::quad() {
+        std::array<glm::vec3, 4> vs = {
+                glm::vec3{ -1, -1, 0 },
+                glm::vec3{ 1, -1, 0 },
+                glm::vec3{ 1, 1, 0 },
+                glm::vec3{ -1, 1, 0 },
+        };
+
+        std::array<glm::vec2, 4> uvs = {
+            glm::vec2{0, 0},
+            glm::vec2{1, 0},
+            glm::vec2{1, 1},
+            glm::vec2{0, 1}
+        };
+
+        std::array<uint32_t, 2 * 3> faces {
+            0, 1, 2,
+            0, 2, 3
+        };
+
+        mesh m;
+        m.set_vertices(vs);
+        m.set_faces(faces);
+        m.set_uvs(uvs);
+        return m;
+    }
+
     mesh primitive::cube()
     {
         std::array<glm::vec3, 8> vs = {

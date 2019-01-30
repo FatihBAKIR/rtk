@@ -71,6 +71,7 @@ namespace geometry
     namespace primitive
     {
         RTK_PUBLIC mesh cube();
+        RTK_PUBLIC mesh quad();
     }
 }
 }
