@@ -28,6 +28,12 @@ namespace RTK_NAMESPACE {
                 add_vertex_data(2, uv_span);
             }
 
+            if (geom.has_normals())
+            {
+                auto normal_span = geom.get_normals();
+                add_vertex_data(1, normal_span);
+            }
+
             glBindVertexArray(m_vao_id);
             glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_ebo_id);
             glBufferData(GL_ELEMENT_ARRAY_BUFFER, face_span.size_bytes(), face_span.data(), GL_STATIC_DRAW);

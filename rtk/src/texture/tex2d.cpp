@@ -70,7 +70,11 @@ namespace RTK_NAMESPACE {
         texture2d load_texture(const std::string& path)
         {
             int w, h;
-            auto data = SOIL_load_image(path.c_str(), &w, &h, 0, SOIL_LOAD_RGB);
+            auto data = SOIL_load_image(path.c_str(), &w, &h, nullptr, SOIL_LOAD_RGB);
+            if (!data)
+            {
+                throw std::runtime_error("couldn't load image from " + path);
+            }
             auto vec3_data = std::make_unique<glm::vec3[]>(w * h);
             for (int i = 0; i < w * h * 3; i += 3)
             {
@@ -146,8 +150,11 @@ namespace RTK_NAMESPACE {
 
             glTexImage2D(GL_TEXTURE_2D, 0, gl_t.internal, m_width, m_height, 0, gl_t.format, gl_t.type, tex.m_data);
 
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         }

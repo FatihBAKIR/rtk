@@ -22,6 +22,8 @@ namespace rtk
 
         if (m_projection_dirty)
         {
+            //m_projection_matrix = glm::ortho<float>(-2, 2, -2, 2, 0.1f, 10.f);
+
             m_projection_matrix = glm::perspective(m_fov, m_aspect_ratio, m_near_plane, m_far_plane);
             m_projection_dirty = false;
         }

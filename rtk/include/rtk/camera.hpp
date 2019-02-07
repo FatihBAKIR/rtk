@@ -34,7 +34,6 @@ namespace RTK_NAMESPACE
         glm::vec2 m_viewport_size = {1.f, 1.f};
 
         rtk::window* display = nullptr;
-
         const rtk::gl::framebuffer* m_fb = nullptr;
 
     public:

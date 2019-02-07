@@ -88,7 +88,7 @@ namespace RTK_NAMESPACE {
             gsl::span<const glm::vec3> get_buffer() const;
         };
 
-        texture2d load_texture(const std::string& path);
+        texture2d load_texture(const std::string& path) RTK_PUBLIC;
     }
 
     namespace gl {

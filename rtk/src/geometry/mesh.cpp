@@ -123,6 +123,12 @@ namespace geometry
         uvs = std::shared_ptr<glm::vec2>(new glm::vec2[vertices_len], [](auto* p){ delete[] p; });
         std::copy(p_uvs.begin(), p_uvs.end(), uvs.get());
     }
+
+    void mesh::set_normals(gsl::span<const glm::vec3> normals)
+    {
+        m_normals = std::shared_ptr<glm::vec3>(new glm::vec3[vertices_len], [](auto* p){ delete[] p; });
+        std::copy(normals.begin(), normals.end(), m_normals.get());
+    }
 }
 }
 

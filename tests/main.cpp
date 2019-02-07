@@ -29,6 +29,21 @@ struct phong_material : app::material
         shader->set_variable("material.specular", specular);
         shader->set_variable("material.phong_exponent", phong_exponent);
 
+        shader->set_variable("material.textured", bool(tex));
+        shader->set_variable("material.normaled", bool(normal_map));
+
+        if (tex)
+        {
+            shader->set_variable("tex", 5, *tex);
+            shader->set_variable("uv_scale", tex_scale);
+        }
+
+        if (normal_map)
+        {
+            shader->set_variable("normal_map", 6, *normal_map);
+            shader->set_variable("uv_scale", tex_scale);
+        }
+
         return *shader;
     }
 
@@ -42,6 +57,11 @@ struct phong_material : app::material
     glm::vec3 specular;
     glm::vec3 ambient;
     float phong_exponent;
+
+    std::shared_ptr<rtk::gl::texture2d> normal_map;
+    std::shared_ptr<rtk::gl::texture2d> tex;
+    float tex_scale = 1;
+
     std::shared_ptr<rtk::gl::program> shader;
 };
 
@@ -51,19 +71,29 @@ auto get_phong_mat()
     mat->shader = get_phong_shader();
     mat->ambient = {1, 1, 1};
     mat->diffuse = {1, 1, 1};
-    mat->specular = {1, 1, 1};
-    mat->phong_exponent = 16.f;
+    mat->specular = {0, 0, 0};
+    mat->phong_exponent = 4.f;
     return mat;
+}
+
+std::shared_ptr<rtk::gl::texture2d> load_tex(const std::string& path)
+{
+    auto tex = rtk::graphics::load_texture(path);
+    return std::make_shared<rtk::gl::texture2d>(tex);
 }
 
 auto get_ground(const std::shared_ptr<phong_material>& mat, const rtk::gl::mesh& mesh)
 {
     app::renderable ground{};
     ground.name = "ground 2";
+
     ground.mat = mat->clone();
     auto ground_mat = dynamic_cast<phong_material*>(ground.mat.get());
-    ground_mat->phong_exponent = 1;
-    ground_mat->ambient = glm::vec3{2, 2, 2};
+    ground_mat->tex = load_tex("../assets/textures/hardwood.png");
+    ground_mat->tex_scale = 50;
+    ground_mat->normal_map = load_tex("../assets/textures/hardwood_normal.png");
+    ground_mat->phong_exponent = 32;
+    ground_mat->specular = glm::vec3{2, 2, 2};
     ground.mesh = &mesh;
     ground.cast_shadow = false;
 
@@ -88,10 +118,6 @@ namespace app {
 
     std::shared_ptr<rtk::gl::texture2d>
     detect_edges(const std::shared_ptr<rtk::gl::texture2d>& depth);
-
-    std::shared_ptr<rtk::gl::texture2d>
-    render_tex(const std::shared_ptr<rtk::gl::texture2d>& depth);
-    
 
     std::shared_ptr<rtk::gl::texture2d>
     thicker(const std::shared_ptr<rtk::gl::texture2d>& depth);
@@ -122,8 +148,18 @@ int main(int argc, char** argv) {
     {
         gl_meshes.emplace_back(create(m));
 
-        auto normals = rtk::geometry::generate_normals(m);
-        gl_meshes.back().add_vertex_data<glm::vec3>(1, normals);
+        if (!m.has_normals())
+        {
+            auto normals = rtk::geometry::generate_normals(m);
+            gl_meshes.back().add_vertex_data<glm::vec3>(1, normals);
+        }
+
+        if (!m.has_uvs())
+            continue;
+
+        auto [bitans, tans] = rtk::geometry::generate_btn(m);
+        gl_meshes.back().add_vertex_data<glm::vec3>(3, bitans);
+        gl_meshes.back().add_vertex_data<glm::vec3>(4, tans);
     }
 
     auto& mesh = meshes[0];
@@ -135,6 +171,8 @@ int main(int argc, char** argv) {
     teapot.name = "teapot";
     teapot.mat = mat;
     teapot.mesh = &gl_meshes[0];
+
+    //teapot.transform->rotate(glm::vec3(-90, 0, 0));
 
     teapot.transform->set_scale(glm::vec3(1.f, 1.f, 1.f) / glm::vec3(max, max, max));
     teapot.transform->set_position(-mesh.get_bbox().position / glm::vec3(max, max, max));
@@ -158,22 +196,26 @@ int main(int argc, char** argv) {
 
     auto ground = get_ground(mat, gl_meshes[2]);
 
+    auto tp_mat = dynamic_cast<phong_material*>(teapot.mat.get());
+    tp_mat->tex = load_tex("../assets/WoodenCrate/Texture/WoodenCrate_Albedo.png");
+    tp_mat->normal_map = load_tex("../assets/WoodenCrate/Texture/WoodenCrate_Normal.png");
+    //tp_mat->diffuse *= 2.f;
+
     spot_light pl;
-    pl.color = glm::vec3{ 25, 0, 0 };
-    pl.transform->set_position({ -5, 5, 0 });
+    pl.color = glm::vec3{ 25, 25, 25 };
+    pl.transform->set_position({ 0, 5, -5 });
 
     spot_light pl2;
-    pl2.color = glm::vec3{ 0, 0, 25 };
-    pl2.transform->set_position({ 5, 5, 0 });
+    pl2.color = glm::vec3{ 25, 25, 25 };
+    pl2.transform->set_position({ 0, 5, 5 });
 
     spot_light pl3;
-    pl3.color = glm::vec3{ 0, 25, 0 };
-    pl3.transform->set_position({ 0, 5, -5 });
+    pl3.color = glm::vec3{ 25, 25, 25 };
+    pl3.transform->set_position({ -5, 5, 0 });
 
-    auto lights_p = std::make_shared<rtk::transform>();
-    pl.transform->set_parent(lights_p);
-    pl2.transform->set_parent(lights_p);
-    pl3.transform->set_parent(lights_p);
+    spot_light pl4;
+    pl4.color = glm::vec3{ 25, 25, 25 };
+    pl4.transform->set_position({ 5, 5, 0 });
 
     cam_controller cc{std::make_unique<rtk::camera>(w), w};
 
@@ -185,24 +227,55 @@ int main(int argc, char** argv) {
     ctx.lights.push_back(pl);
     ctx.lights.push_back(pl2);
     ctx.lights.push_back(pl3);
-    ctx.ambient = ambient_light{ glm::vec3{ .1, .1, .1 } };
+    ctx.lights.push_back(pl4);
+    ctx.ambient = ambient_light{ glm::vec3{ .2, .2, .2 } };
 
+    for (auto& l : ctx.lights) l.transform->look_at(teapot.transform->get_pos());
     using namespace std::chrono_literals;
     using clk = std::chrono::system_clock;
     std::chrono::microseconds dt = 10ms;
-    for (auto& l : ctx.lights) l.transform->look_at(teapot.transform->get_pos());
 
     while (!w.should_close())
     {
         auto beg = clk::now();
         ImGui_ImplGlfwGL3_NewFrame();
 
-        if (w.get_key_down(GLFW_KEY_L))
-        {
-            lights_p->rotate(glm::vec3{0, 1, 0});
+        if (w.get_key_down(GLFW_KEY_UP)){
+            pl.transform->translate(rtk::vectors::forward / 50.f, rtk::space::world);
+
+            for (auto& l : ctx.lights) l.transform->look_at(teapot.transform->get_pos());
+        }
+        if (w.get_key_down(GLFW_KEY_DOWN)){
+            pl.transform->translate(rtk::vectors::back / 50.f, rtk::space::world);
+
+            for (auto& l : ctx.lights) l.transform->look_at(teapot.transform->get_pos());
         }
 
-        auto obj_im = object_pass(cc.get_camera(), ctx);
+        if (w.get_key_down(GLFW_KEY_LEFT)){
+            pl.transform->translate(rtk::vectors::left / 50.f, rtk::space::world);
+
+            for (auto& l : ctx.lights) l.transform->look_at(teapot.transform->get_pos());
+        }
+        if (w.get_key_down(GLFW_KEY_RIGHT)){
+            pl.transform->translate(rtk::vectors::right / 50.f, rtk::space::world);
+
+            for (auto& l : ctx.lights) l.transform->look_at(teapot.transform->get_pos());
+        }
+
+
+        if (w.get_key_down(GLFW_KEY_P)){
+            pl.transform->translate(rtk::vectors::up / 50.f, rtk::space::world);
+
+            for (auto& l : ctx.lights) l.transform->look_at(teapot.transform->get_pos());
+        }
+        if (w.get_key_down(GLFW_KEY_L)){
+            pl.transform->translate(rtk::vectors::down / 50.f, rtk::space::world);
+
+            for (auto& l : ctx.lights) l.transform->look_at(teapot.transform->get_pos());
+        }
+
+
+        /*auto obj_im = object_pass(cc.get_camera(), ctx);
         auto edges = detect_edges(obj_im);
         auto thicker = app::thicker(edges);
         auto thicker2 = app::thicker(thicker);
@@ -211,7 +284,7 @@ int main(int argc, char** argv) {
 
         auto out = render_to_tex(cc.get_camera(), ctx);
 
-        auto fin = contour(thicker3, out);
+        auto fin = contour(thicker3, out);*/
 
         //auto im = geometry_pass(cc.get_camera(), ctx);
         //auto bet = visualize_depth(im);
@@ -221,7 +294,7 @@ int main(int argc, char** argv) {
 
         cc.pre_render(dt.count() / 1'000'000.f);
 
-        //render(cc.get_camera(), ctx);
+        render(cc.get_camera(), ctx);
 
         ImGui::Begin("Info");
         ImGui::Text("FPS: %d", int(1000 / (dt.count() / 1'000.f)));
@@ -236,7 +309,7 @@ int main(int argc, char** argv) {
 
         ImGui::Begin("Shadow map of light 3");
         //ImGui::Image((void*)bet->get_id(), ImVec2{450,300});
-        ImGui::Image((void*)fin->get_id(), ImVec2{900,600});
+        //ImGui::Image((void*)fin->get_id(), ImVec2{900,600});
         ImGui::End();
 
         ImGui::Render();
