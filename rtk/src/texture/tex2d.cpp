@@ -70,7 +70,11 @@ namespace RTK_NAMESPACE {
         texture2d load_texture(const std::string& path)
         {
             int w, h;
-            auto data = SOIL_load_image(path.c_str(), &w, &h, 0, SOIL_LOAD_RGB);
+            auto data = SOIL_load_image(path.c_str(), &w, &h, nullptr, SOIL_LOAD_RGB);
+            if (!data)
+            {
+                throw std::runtime_error("couldn't load image from " + path);
+            }
             auto vec3_data = std::make_unique<glm::vec3[]>(w * h);
             for (int i = 0; i < w * h * 3; i += 3)
             {
@@ -131,7 +135,32 @@ namespace RTK_NAMESPACE {
             return { rtk::pixels(m_width), rtk::pixels(m_height) };
         }
 
-        texture2d::texture2d(const graphics::unsafe_texture& tex)
+        void cubemap::activate() const {
+            glBindTexture(GL_TEXTURE_CUBE_MAP, m_texture_id);
+        }
+
+        cubemap::cubemap(const std::array<graphics::unsafe_texture *, 6> &faces) {
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+            glGenTextures(1, &m_texture_id);
+            glBindTexture(GL_TEXTURE_CUBE_MAP, m_texture_id);
+
+            auto gl_t = to_gl_type(m_fmt);
+            for (int i = 0; i < 6; ++i)
+            {
+                auto& tex = *faces[i];
+                glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0,
+                        gl_t.internal, tex.m_width, tex.m_height, 0, gl_t.format, gl_t.type, tex.m_data);
+            }
+
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        }
+
+        texture2d::texture2d(const graphics::unsafe_texture& tex, bool mipmap)
         {
             m_width = tex.m_width;
             m_height = tex.m_height;
@@ -146,10 +175,21 @@ namespace RTK_NAMESPACE {
 
             glTexImage2D(GL_TEXTURE_2D, 0, gl_t.internal, m_width, m_height, 0, gl_t.format, gl_t.type, tex.m_data);
 
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+            if (mipmap)
+            {
+                glGenerateMipmap(GL_TEXTURE_2D);
+
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            }
+            else
+            {
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            }
         }
 
         std::shared_ptr<texture2d> create_texture(rtk::resolution r, graphics::pixel_format fmt)

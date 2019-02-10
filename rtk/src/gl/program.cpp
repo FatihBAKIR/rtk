@@ -94,6 +94,11 @@ namespace gl
         glUniform1i(loc, tex);
     }
 
+    void program::set_variable(const std::string &name, const gl::cubemap & c) {
+        use();
+        c.activate();
+    }
+
     void program::set_array(const std::string& name, gsl::span<const glm::mat4> mats)
     {
         use();

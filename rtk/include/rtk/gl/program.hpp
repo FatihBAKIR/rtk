@@ -35,6 +35,7 @@ public:
     void set_variable(const std::string& name, float);
     void set_variable(const std::string& name, const glm::mat4&);
     void set_variable(const std::string& name, int tex_id, const gl::texture2d&);
+    void set_variable(const std::string& name, const gl::cubemap&);
 
     void set_array(const std::string& name, gsl::span<const glm::mat4>);
 

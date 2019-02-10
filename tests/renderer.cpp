@@ -63,7 +63,8 @@ namespace app
 
         static auto shader = get_shadow_shader();
 
-        const glm::mat4 dpm = glm::ortho<float>(-2, 2, -2, 2, 0.1f, 10.f);
+        const glm::mat4 dpm = glm::perspective<float>(glm::radians(90.f), 1, 1.f, 100.f);
+        //const glm::mat4 dpm = glm::ortho<float>(-2, 2, -2, 2, 0.1f, 10.f);
 
         auto& trans = l.transform;
         auto pos = trans->get_pos();

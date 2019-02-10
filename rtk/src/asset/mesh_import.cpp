@@ -74,6 +74,23 @@ namespace rtk {
 
                 return uvs;
             }
+
+            std::vector<glm::vec3> read_normals(const aiMesh* mesh)
+            {
+                std::vector<glm::vec3> normals;
+                normals.reserve(mesh->mNumVertices);
+
+                for (unsigned int j = 0; j < mesh->mNumVertices; ++j)
+                {
+                    glm::vec3 normal;
+                    normal.x = mesh->mNormals[j].x;
+                    normal.y = mesh->mNormals[j].y;
+                    normal.z = mesh->mNormals[j].z;
+                    normals.push_back(normal);
+                }
+
+                return normals;
+            }
         }
 
         static std::vector<geometry::mesh> load_meshes(const aiScene* scene)
@@ -91,6 +108,9 @@ namespace rtk {
                 rtk::geometry::mesh m;
                 m.set_vertices(read_positions(mesh));
                 m.set_faces(read_faces(mesh));
+                if (mesh->HasNormals()) {
+
+                }
                 if (mesh->HasTextureCoords(0)) {
                     m.set_uvs(read_uvs(mesh));
                 }

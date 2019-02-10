@@ -1,0 +1,14 @@
+[requires]
+glm/0.9.9.1@g-truc/stable
+gsl_microsoft/20180102@bincrafters/stable
+boost/1.69.0@conan/stable
+Assimp/4.1.0@jacmoe/stable
+
+
+[options]
+Assimp:shared=False
+boost:shared=False
+boost:python_executable=None
+
+[generators]
+cmake

@@ -88,13 +88,29 @@ namespace RTK_NAMESPACE {
             gsl::span<const glm::vec3> get_buffer() const;
         };
 
-        texture2d load_texture(const std::string& path);
+        texture2d load_texture(const std::string& path) RTK_PUBLIC;
     }
 
     namespace gl {
 
         template <class elem_type, int channel_count>
         struct texture_traits;
+
+        class RTK_PUBLIC cubemap
+        {
+            uint16_t m_width, m_height;
+            GLuint m_texture_id;
+
+            graphics::pixel_format m_fmt;
+            int wrap_mode;
+            int filter_mode;
+
+        public:
+
+            explicit cubemap(const std::array<graphics::unsafe_texture*, 6>& faces);
+
+            void activate() const;
+        };
 
         class RTK_PUBLIC texture2d
         {
@@ -114,7 +130,7 @@ namespace RTK_NAMESPACE {
         public:
             texture2d() = default;
 
-            explicit texture2d(const graphics::unsafe_texture& tex);
+            explicit texture2d(const graphics::unsafe_texture& tex, bool mipmap = true);
 
             texture2d(texture2d&& rhs) noexcept
             {

@@ -3,7 +3,9 @@
 
 in vec4 light_pos[8];
 in vec4 world_position;
-in vec4 world_normal;
+in vec3 world_normal;
+in vec2 uv;
+in mat3 tbn;
 
 out vec4 final_color;
 
@@ -27,6 +29,8 @@ struct PhongMaterial
     vec3 diffuse;
     vec3 specular;
     float phong_exponent;
+    bool textured;
+    bool normaled;
 };
 
 uniform PhongMaterial material;
@@ -39,9 +43,33 @@ uniform int number_of_point_lights;
 uniform DirectionalLight directional_light;
 uniform vec3 camera_position;
 
+uniform sampler2D tex;
+uniform sampler2D normal_map;
+
+vec3 get_ambient()
+{
+    if (material.textured)
+    {
+        return texture(tex, uv).rgb * material.ambient;
+    }
+    return material.ambient;
+}
+
 vec3 get_diffuse()
 {
+    if (material.textured)
+    {
+        return texture(tex, uv).rgb * material.diffuse;
+    }
     return material.diffuse;
+}
+
+vec3 get_normal()
+{
+    if (!material.normaled) return world_normal;
+    vec3 normal = texture(normal_map, uv).rgb;
+    normal = normalize(normal * 2.0 - 1.0);
+    return normalize(tbn * normal);
 }
 
 float visible(int i)
@@ -54,25 +82,24 @@ float visible(int i)
         return 1.0;
     }
 
-    float closestDepth = texture(point_light[i].shadowTex, projCoords.xy).r;
     float currentDepth = projCoords.z;
 
-    float bias = max(0.05 * (1.0 - dot(vec3(world_normal), normalize(point_light[i].position - vec3(world_position)))), 0.005);
+    vec3 frag_to_light = point_light[i].position - vec3(world_position);
 
-    return currentDepth - bias/2 > closestDepth ? 0.0 : 1.0;
+    float bias = 0.005f;//max(0.05 * (1.0 - dot(get_normal(), normalize(frag_to_light))), 0.005);
 
     float shadow = 0.0;
     vec2 texelSize = 1.0 / textureSize(point_light[i].shadowTex, 0);
-    for(int x = -2; x <= 2; ++x)
+    for(int x = -3; x <= 3; ++x)
     {
-        for(int y = -2; y <= 2; ++y)
+        for(int y = -3; y <= 3; ++y)
         {
             float pcfDepth = texture(point_light[i].shadowTex, projCoords.xy + vec2(x, y) * texelSize).r;
             shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
         }
     }
-    shadow /= 25.0;
-    return shadow;
+    shadow /= 49.0;
+    return 1 - shadow;
 }
 
 vec3 computeRadiancePointLight(PointLight pointlight, float distance);
@@ -82,7 +109,12 @@ vec3 computeReflectance(PhongMaterial material, vec3 to_light, vec3 normal, vec3
 
 void main()
 {
-    vec3 color = material.ambient * ambient_light;
+    /*if (material.normaled)
+    {
+        final_color = vec4((get_normal() + 1.0) / 2.0, 1.0);
+        return;
+    }*/
+    vec3 color = get_ambient() * ambient_light;
 
     vec3 to_eye = normalize(camera_position - vec3(world_position));
 
@@ -92,7 +124,7 @@ void main()
         float distance = length(to_light);
         to_light /= distance;
         color +=
-            computeReflectance(material, to_light, vec3(world_normal), to_eye) *
+            computeReflectance(material, to_light, get_normal(), to_eye) *
             computeRadiancePointLight(point_light[i], distance) *
             visible(i);
     }

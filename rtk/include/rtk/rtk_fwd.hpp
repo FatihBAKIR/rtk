@@ -45,6 +45,7 @@ namespace RTK_NAMESPACE
         class path;
 
         class texture2d;
+        class cubemap;
         class framebuffer;
     }
 }

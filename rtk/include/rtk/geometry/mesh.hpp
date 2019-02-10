@@ -14,6 +14,12 @@ namespace RTK_NAMESPACE
 {
 namespace geometry
 {
+    struct bt
+    {
+        glm::vec3 bitangent;
+        glm::vec3 tangent;
+    };
+
     class RTK_PUBLIC mesh {
         std::size_t vertices_len;
         std::size_t faces_len;
@@ -21,12 +27,16 @@ namespace geometry
         std::shared_ptr<glm::vec3> vertices;
         std::shared_ptr<glm::vec2> uvs;
         std::shared_ptr<std::uint32_t> faces;
+        std::shared_ptr<glm::vec3> m_normals;
 
         physics::aabb bbox;
     public:
         mesh();
 
+        bool have_uvs() const { return bool(uvs); }
+
         void set_vertices(gsl::span<const glm::vec3>);
+        void set_normals(gsl::span<const glm::vec3>);
         void set_faces(gsl::span<const std::uint32_t>);
         void set_uvs(gsl::span<const glm::vec2>);
 
@@ -41,6 +51,16 @@ namespace geometry
         gsl::span<glm::vec3> get_vertices()
         {
             return {vertices.get(), (long) vertices_len};
+        }
+
+        gsl::span<glm::vec3> get_normals()
+        {
+            return {m_normals.get(), (long) vertices_len};
+        }
+
+        gsl::span<const glm::vec3> get_normals() const
+        {
+            return {m_normals.get(), (long) vertices_len};
         }
 
         gsl::span<const glm::vec2> get_uvs() const
@@ -58,6 +78,10 @@ namespace geometry
 
         bool has_uvs() const {
             return uvs != nullptr;
+        }
+
+        bool has_normals() const {
+            return m_normals != nullptr;
         }
 
         physics::aabb get_bbox() const
