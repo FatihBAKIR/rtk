@@ -13,7 +13,7 @@ namespace app
     struct scene
     {
         std::vector<renderable> objects;
-        std::vector<spot_light> lights;
+        std::vector<area_light> lights;
         ambient_light ambient;
     };
 }

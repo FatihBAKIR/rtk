@@ -201,19 +201,19 @@ int main(int argc, char** argv) {
     tp_mat->normal_map = load_tex("../assets/WoodenCrate/Texture/WoodenCrate_Normal.png");
     //tp_mat->diffuse *= 2.f;
 
-    spot_light pl;
+    area_light pl;
     pl.color = glm::vec3{ 25, 25, 25 };
-    pl.transform->set_position({ 0, 5, -5 });
+    pl.transform->set_position({ 5, 5, -2 });
 
-    spot_light pl2;
+    area_light pl2;
     pl2.color = glm::vec3{ 25, 25, 25 };
     pl2.transform->set_position({ 0, 5, 5 });
 
-    spot_light pl3;
+    area_light pl3;
     pl3.color = glm::vec3{ 25, 25, 25 };
     pl3.transform->set_position({ -5, 5, 0 });
 
-    spot_light pl4;
+    area_light pl4;
     pl4.color = glm::vec3{ 25, 25, 25 };
     pl4.transform->set_position({ 5, 5, 0 });
 
@@ -225,9 +225,9 @@ int main(int argc, char** argv) {
     ctx.objects.push_back(bounds);
 
     ctx.lights.push_back(pl);
-    ctx.lights.push_back(pl2);
-    ctx.lights.push_back(pl3);
-    ctx.lights.push_back(pl4);
+    //ctx.lights.push_back(pl2);
+    //ctx.lights.push_back(pl3);
+    //ctx.lights.push_back(pl4);
     ctx.ambient = ambient_light{ glm::vec3{ .2, .2, .2 } };
 
     for (auto& l : ctx.lights) l.transform->look_at(teapot.transform->get_pos());
@@ -274,17 +274,16 @@ int main(int argc, char** argv) {
             for (auto& l : ctx.lights) l.transform->look_at(teapot.transform->get_pos());
         }
 
+        //auto obj_im = object_pass(cc.get_camera(), ctx);
+        //auto edges = detect_edges(obj_im);
+        //auto thicker = app::thicker(edges);
+        //auto thicker2 = app::thicker(thicker);
+        //auto thicker3 = app::thicker(thicker2);
+        //auto obj_v = visualize_depth(thicker3);
 
-        /*auto obj_im = object_pass(cc.get_camera(), ctx);
-        auto edges = detect_edges(obj_im);
-        auto thicker = app::thicker(edges);
-        auto thicker2 = app::thicker(thicker);
-        auto thicker3 = app::thicker(thicker2);
-        auto obj_v = visualize_depth(thicker3);
+        //auto out = render_to_tex(cc.get_camera(), ctx);
 
-        auto out = render_to_tex(cc.get_camera(), ctx);
-
-        auto fin = contour(thicker3, out);*/
+        //auto fin = contour(thicker, out);
 
         //auto im = geometry_pass(cc.get_camera(), ctx);
         //auto bet = visualize_depth(im);
@@ -309,7 +308,8 @@ int main(int argc, char** argv) {
 
         ImGui::Begin("Shadow map of light 3");
         //ImGui::Image((void*)bet->get_id(), ImVec2{450,300});
-        //ImGui::Image((void*)fin->get_id(), ImVec2{900,600});
+        //ImGui::Image((void*)thicker->get_id(), ImVec2{900,600});
+        ImGui::SliderFloat("Light size", &ctx.lights[0].size, 1, 10);
         ImGui::End();
 
         ImGui::Render();

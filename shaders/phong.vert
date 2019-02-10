@@ -28,6 +28,7 @@ struct PointLight
 {
     vec3 intensity;
     vec3 position;
+    float size;
     sampler2D shadowTex;
     mat4 transform;
 };
