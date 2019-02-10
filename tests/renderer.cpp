@@ -52,11 +52,11 @@ namespace {
 namespace app
 {
     std::pair<std::shared_ptr<rtk::gl::texture2d>, glm::mat4>
-    light_pass(const scene& ctx, const spot_light& l)
+    light_pass(const scene& ctx, const area_light& l)
     {
         using namespace rtk::literals;
         auto out = rtk::gl::create_texture(
-                rtk::resolution(4096_px, 4096_px),
+                rtk::resolution(3072_px, 3072_px),
                 rtk::graphics::pixel_format::gl_depth16);
         out->activate(0);
         rtk::gl::framebuffer shadow_buf(*out);
@@ -221,8 +221,6 @@ namespace app
         glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
                               cam.get_resolution().width, cam.get_resolution().height);
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-
 
         shadow_buf.activate();
         shadow_buf.set_viewport();

@@ -13,6 +13,7 @@ struct PointLight
 {
     vec3 intensity;
     vec3 position;
+    float size;
     sampler2D shadowTex;
     mat4 transform;
 };
@@ -82,23 +83,45 @@ float visible(int i)
         return 1.0;
     }
 
-    float currentDepth = projCoords.z;
-
-    vec3 frag_to_light = point_light[i].position - vec3(world_position);
+    float fragment_depth = projCoords.z;
 
     float bias = 0.005f;//max(0.05 * (1.0 - dot(get_normal(), normalize(frag_to_light))), 0.005);
 
-    float shadow = 0.0;
+    float total_depth = 0;
+    int total = 0;
     vec2 texelSize = 1.0 / textureSize(point_light[i].shadowTex, 0);
+
     for(int x = -3; x <= 3; ++x)
     {
         for(int y = -3; y <= 3; ++y)
         {
             float pcfDepth = texture(point_light[i].shadowTex, projCoords.xy + vec2(x, y) * texelSize).r;
-            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;
+            if (fragment_depth - bias > pcfDepth)
+            {
+                total_depth += pcfDepth;
+                ++total;
+            }
         }
     }
-    shadow /= 49.0;
+
+    if (total == 0) return 1.0;
+
+    float avg_d = total_depth / total;
+    float w_pen = ((fragment_depth - avg_d) / avg_d);
+
+    int sz = min(10, max(1, int(ceil(15 * point_light[i].size * w_pen))));
+
+    float shadow = 0.0;
+    for(int x = -sz; x <= sz; ++x)
+    {
+        for(int y = -sz; y <= sz; ++y)
+        {
+            float pcfDepth = texture(point_light[i].shadowTex, projCoords.xy + vec2(x, y) * texelSize).r;
+            shadow += fragment_depth - bias > pcfDepth ? 1.0 : 0.0;
+        }
+    }
+    shadow /= pow(2 * sz + 1, 2);
+
     return 1 - shadow;
 }
 

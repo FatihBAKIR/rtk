@@ -19,16 +19,18 @@ namespace app
         glm::vec3 ambient;
     };
 
-    struct spot_light
+    struct area_light
     {
         glm::vec3 color;
+        float size = 1;
         std::shared_ptr<rtk::transform> transform = std::make_shared<rtk::transform>();
     };
 
-    inline void apply(rtk::gl::program& p, const std::string& base, const spot_light& pl)
+    inline void apply(rtk::gl::program& p, const std::string& base, const area_light& al)
     {
-        p.set_variable(base + ".intensity", pl.color);
-        p.set_variable(base + ".position", pl.transform->get_pos());
+        p.set_variable(base + ".intensity", al.color);
+        p.set_variable(base + ".size", al.size);
+        p.set_variable(base + ".position", al.transform->get_pos());
     }
 
     inline void apply(rtk::gl::program& p, const ambient_light& al)
