@@ -1,0 +1,7 @@
+vert: "phong.vert"
+frag: "phong.frag"
+name: "Phong"
+diffuse: [0.65, 0.709, 0.760]
+specular: [1, 1, 1]
+ambient: [1, 1, 1]
+phong: 32

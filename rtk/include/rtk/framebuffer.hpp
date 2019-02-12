@@ -22,7 +22,11 @@ namespace gl
         const texture2d* get_texture() const { return m_render_to; }
 
         void activate() const;
+        void activate_raw() const;
+        void activate_col() const;
         void activate_depth() const;
+
+        bool complete() const;
 
         void set_viewport();
 

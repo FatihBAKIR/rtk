@@ -22,7 +22,7 @@ namespace app
     struct area_light
     {
         glm::vec3 color;
-        float size = 1;
+        float size = 4;
         std::shared_ptr<rtk::transform> transform = std::make_shared<rtk::transform>();
     };
 

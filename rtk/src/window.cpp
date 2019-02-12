@@ -33,6 +33,7 @@ namespace rtk {
 #ifdef __APPLE__
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
+        glfwWindowHint(GLFW_SAMPLES, 4);
 
         m_wnd = glfwCreateWindow(res.width, res.height, title.c_str(), nullptr, nullptr);
 
@@ -46,6 +47,7 @@ namespace rtk {
 #endif
             return 1;
         }();
+        glEnable(GL_MULTISAMPLE);
 
         assert(m_wnd);
 

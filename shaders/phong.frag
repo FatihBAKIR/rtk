@@ -85,15 +85,19 @@ float visible(int i)
 
     float fragment_depth = projCoords.z;
 
+    float distance = length(point_light[i].position - vec3(world_position));
+
     float bias = 0.005f;//max(0.05 * (1.0 - dot(get_normal(), normalize(frag_to_light))), 0.005);
 
     float total_depth = 0;
     int total = 0;
     vec2 texelSize = 1.0 / textureSize(point_light[i].shadowTex, 0);
 
-    for(int x = -3; x <= 3; ++x)
+    int blocker_sz = int (log2(point_light[i].size) * log2(point_light[i].size) * 0.5);
+
+    for(int x = -blocker_sz; x <= blocker_sz; ++x)
     {
-        for(int y = -3; y <= 3; ++y)
+        for(int y = -blocker_sz; y <= blocker_sz; ++y)
         {
             float pcfDepth = texture(point_light[i].shadowTex, projCoords.xy + vec2(x, y) * texelSize).r;
             if (fragment_depth - bias > pcfDepth)

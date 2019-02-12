@@ -1,0 +1,10 @@
+vert: "phong.vert"
+frag: "phong.frag"
+name: "Phong"
+diffuse: [1, 1, 1]
+specular: [0, 0, 0]
+ambient: [1, 1, 1]
+phong: 1
+diffuse_map: "WoodenCrate/Texture/WoodenCrate_Albedo.png"
+normal_map: "WoodenCrate/Texture/WoodenCrate_Normal.png"
+tex_scale: 1

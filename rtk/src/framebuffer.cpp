@@ -40,6 +40,20 @@ namespace gl
         glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, m_render_to->m_texture_id, 0);
     }
 
+    void framebuffer::activate_col() const {
+        glBindFramebuffer(GL_FRAMEBUFFER, m_fb_id);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_render_to->m_texture_id, 0);
+    }
+
+
+    bool framebuffer::complete() const {
+        return glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
+    }
+
+    void framebuffer::activate_raw() const {
+        glBindFramebuffer(GL_FRAMEBUFFER, m_fb_id);
+    }
+
     void framebuffer::activate_depth() const
     {
         glBindFramebuffer(GL_FRAMEBUFFER, m_fb_id);

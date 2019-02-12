@@ -52,14 +52,11 @@ namespace {
 namespace app
 {
     std::pair<std::shared_ptr<rtk::gl::texture2d>, glm::mat4>
-    light_pass(const scene& ctx, const area_light& l)
+    light_pass(const scene& ctx, const area_light& l, std::shared_ptr<rtk::gl::texture2d>& tex)
     {
         using namespace rtk::literals;
-        auto out = rtk::gl::create_texture(
-                rtk::resolution(3072_px, 3072_px),
-                rtk::graphics::pixel_format::gl_depth16);
-        out->activate(0);
-        rtk::gl::framebuffer shadow_buf(*out);
+
+        rtk::gl::framebuffer shadow_buf(*tex);
 
         static auto shader = get_shadow_shader();
 
@@ -96,7 +93,7 @@ namespace app
             obj.mesh->draw(*shader);
         }
 
-        return { out, mvp };
+        return { tex, mvp };
     }
 
     std::shared_ptr<rtk::gl::texture2d>
@@ -129,11 +126,11 @@ namespace app
     detect_edges(const std::shared_ptr<rtk::gl::texture2d>& depth)
     {
         using namespace rtk::literals;
-        auto out = rtk::gl::create_texture(
+        static auto out = rtk::gl::create_texture(
                 depth->get_resolution(),
                 rtk::graphics::pixel_format::rgb_byte);
 
-        rtk::gl::framebuffer shadow_buf(*out);
+        static rtk::gl::framebuffer shadow_buf(*out);
 
         auto mesh = create(rtk::geometry::primitive::quad());
 
@@ -148,6 +145,8 @@ namespace app
 
         mesh.draw(*vis_shader);
 
+        rtk::gl::reset_framebuffer();
+
         return out;
     }
 
@@ -155,11 +154,11 @@ namespace app
     thicker(const std::shared_ptr<rtk::gl::texture2d>& depth)
     {
         using namespace rtk::literals;
-        auto out = rtk::gl::create_texture(
+        static auto out = rtk::gl::create_texture(
                 depth->get_resolution(),
                 rtk::graphics::pixel_format::rgb_byte);
 
-        rtk::gl::framebuffer shadow_buf(*out);
+        static rtk::gl::framebuffer shadow_buf(*out);
 
         auto mesh = create(rtk::geometry::primitive::quad());
 
@@ -174,25 +173,17 @@ namespace app
 
         mesh.draw(*vis_shader);
 
+        rtk::gl::reset_framebuffer();
+
         return out;
     }
 
     std::shared_ptr<rtk::gl::texture2d>
     contour(const std::shared_ptr<rtk::gl::texture2d>& edges, const std::shared_ptr<rtk::gl::texture2d>& scene)
     {
-        using namespace rtk::literals;
-        auto out = rtk::gl::create_texture(
-                scene->get_resolution(),
-                rtk::graphics::pixel_format::rgb_byte);
-
-        rtk::gl::framebuffer shadow_buf(*out);
-
-        auto mesh = create(rtk::geometry::primitive::quad());
+        static auto mesh = create(rtk::geometry::primitive::quad());
 
         static auto vis_shader = get_contour_shader();
-
-        shadow_buf.activate();
-        shadow_buf.set_viewport();
 
         glClear(GL_COLOR_BUFFER_BIT);
 
@@ -201,7 +192,7 @@ namespace app
 
         mesh.draw(*vis_shader);
 
-        return out;
+        return nullptr;
     }
 
     std::shared_ptr<rtk::gl::texture2d>
@@ -209,26 +200,35 @@ namespace app
     {
         rtk::gl::reset_framebuffer();
         using namespace rtk::literals;
-        auto out = rtk::gl::create_texture(
+
+        static auto out = rtk::gl::create_texture(
                 cam.get_resolution(),
                 rtk::graphics::pixel_format::rgb_byte);
 
-        rtk::gl::framebuffer shadow_buf(*out);
+        static rtk::gl::framebuffer shadow_buf(*out);
 
-        GLuint rboId;
-        glGenRenderbuffers(1, &rboId);
-        glBindRenderbuffer(GL_RENDERBUFFER, rboId);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
-                              cam.get_resolution().width, cam.get_resolution().height);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+        shadow_buf.activate_raw();
 
-        shadow_buf.activate();
-        shadow_buf.set_viewport();
+        static auto rboId = [&] {
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, out->get_id(), 0);
 
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER,      // 1. fbo target: GL_FRAMEBUFFER
-                                  GL_DEPTH_ATTACHMENT, // 2. attachment point
-                                  GL_RENDERBUFFER,     // 3. rbo target: GL_RENDERBUFFER
-                                  rboId);              // 4. rbo ID
+            GLuint rboId;
+            glGenRenderbuffers(1, &rboId);
+            glBindRenderbuffer(GL_RENDERBUFFER, rboId);
+
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
+                                  cam.get_resolution().width, cam.get_resolution().height);
+            glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER,      // 1. fbo target: GL_FRAMEBUFFER
+                                      GL_DEPTH_ATTACHMENT, // 2. attachment point
+                                      GL_RENDERBUFFER,     // 3. rbo target: GL_RENDERBUFFER
+                                      rboId);              // 4. rbo ID
+
+            return rboId;
+        }();
+
+        assert(shadow_buf.complete());
 
         glClearColor(0, 0, 0, 1);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -238,6 +238,7 @@ namespace app
 
         shader->set_variable("vp", cam.get_vp_matrix());
 
+        shadow_buf.set_viewport();
         int num = 1;
         for (auto& obj : ctx.objects)
         {
@@ -250,6 +251,8 @@ namespace app
             obj.mesh->draw(*shader);
         }
 
+        rtk::gl::reset_framebuffer();
+
         return out;
     }
 
@@ -257,11 +260,10 @@ namespace app
     geometry_pass(const rtk::camera& cam, const scene& ctx)
     {
         using namespace rtk::literals;
-        auto out = rtk::gl::create_texture(
+        static auto out = rtk::gl::create_texture(
                 cam.get_resolution(),
                 rtk::graphics::pixel_format::gl_depth16);
-        out->activate(0);
-        rtk::gl::framebuffer shadow_buf(*out);
+        static rtk::gl::framebuffer shadow_buf(*out);
 
         auto shader = get_geometry_shader();
 
@@ -292,6 +294,17 @@ namespace app
     {
         std::vector<std::shared_ptr<rtk::gl::texture2d>> sms;
         std::vector<glm::mat4> light_transforms;
+
+        shadow_ctx(int len) : sms(len), light_transforms(len) {
+            using namespace rtk::literals;
+
+            for (auto& sm : sms)
+            {
+                sm = rtk::gl::create_texture(
+                        rtk::resolution(8192_px, 8192_px),
+                        rtk::graphics::pixel_format::gl_depth16);
+            }
+        }
     };
 
     void render_one(
@@ -334,67 +347,51 @@ namespace app
         }
     }
 
-    void render(const rtk::camera& cam, const app::scene& ctx)
-    {
-        rtk::gl::reset_framebuffer();
-        shadow_ctx shadow;
-
-        glCullFace(GL_FRONT);
-        for (auto& light : ctx.lights)
-        {
-            auto [out, vp] = light_pass(ctx, light);
-            shadow.sms.push_back(out);
-            shadow.light_transforms.push_back(vp);
-        }
-        glCullFace(GL_BACK);
-
-        rtk::gl::reset_framebuffer();
-
-        for (auto& obj : ctx.objects)
-        {
-            render_one(cam, ctx, shadow, obj);
-        }
-    }
-
     std::shared_ptr<rtk::gl::texture2d>
             render_to_tex(const rtk::camera& cam, const app::scene& ctx)
     {
+        using namespace rtk::literals;
+
         rtk::gl::reset_framebuffer();
-        shadow_ctx shadow;
+        static shadow_ctx shadow(ctx.lights.size());
 
         glCullFace(GL_FRONT);
-        for (auto& light : ctx.lights)
+        for (int i = 0; i < ctx.lights.size(); ++i)
         {
-            auto [out, vp] = light_pass(ctx, light);
-            shadow.sms.push_back(out);
-            shadow.light_transforms.push_back(vp);
+            auto [_, vp] = light_pass(ctx, ctx.lights[i], shadow.sms[i]);
+            shadow.light_transforms[i] = vp;
         }
         glCullFace(GL_BACK);
 
-        rtk::gl::reset_framebuffer();
-        using namespace rtk::literals;
-        auto out = rtk::gl::create_texture(
+        static auto out = rtk::gl::create_texture(
                 cam.get_resolution(),
                 rtk::graphics::pixel_format::rgb_byte);
 
-        rtk::gl::framebuffer shadow_buf(*out);
+        static rtk::gl::framebuffer shadow_buf(*out);
 
-        GLuint rboId;
-        glGenRenderbuffers(1, &rboId);
-        glBindRenderbuffer(GL_RENDERBUFFER, rboId);
-        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
-                              cam.get_resolution().width, cam.get_resolution().height);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+        shadow_buf.activate_raw();
 
-        shadow_buf.activate();
-        shadow_buf.set_viewport();
+        static auto rboId = [&] {
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, out->get_id(), 0);
 
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER,      // 1. fbo target: GL_FRAMEBUFFER
-                                  GL_DEPTH_ATTACHMENT, // 2. attachment point
-                                  GL_RENDERBUFFER,     // 3. rbo target: GL_RENDERBUFFER
-                                  rboId);              // 4. rbo ID
+            GLuint rboId;
+            glGenRenderbuffers(1, &rboId);
+            glBindRenderbuffer(GL_RENDERBUFFER, rboId);
 
-        glClearColor(0, 0, 0, 1);
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
+                                  cam.get_resolution().width, cam.get_resolution().height);
+            glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER,      // 1. fbo target: GL_FRAMEBUFFER
+                                      GL_DEPTH_ATTACHMENT, // 2. attachment point
+                                      GL_RENDERBUFFER,     // 3. rbo target: GL_RENDERBUFFER
+                                      rboId);              // 4. rbo ID
+
+            return rboId;
+        }();
+
+        //glEnable(GL_FRAMEBUFFER_SRGB);
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
 
@@ -402,6 +399,8 @@ namespace app
         {
             render_one(cam, ctx, shadow, obj);
         }
+
+        rtk::gl::reset_framebuffer();
 
         return out;
     }
