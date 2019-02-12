@@ -29,11 +29,17 @@ namespace geometry
         std::shared_ptr<std::uint32_t> faces;
         std::shared_ptr<glm::vec3> m_normals;
 
+        std::string m_mat_name;
+
         physics::aabb bbox;
     public:
         mesh();
 
         bool have_uvs() const { return bool(uvs); }
+
+        void set_mat(const std::string& name) {
+            m_mat_name = name;
+        }
 
         void set_vertices(gsl::span<const glm::vec3>);
         void set_normals(gsl::span<const glm::vec3>);

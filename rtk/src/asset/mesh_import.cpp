@@ -9,6 +9,7 @@
 #include <assimp/postprocess.h>
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
+#include <iostream>
 
 namespace rtk {
     namespace assets {
@@ -101,11 +102,22 @@ namespace rtk {
 
             std::vector<rtk::geometry::mesh> meshes;
 
+            auto get_mat_name = [&](const aiMesh* m) -> std::string {
+                aiString n;
+                auto r = scene->mMaterials[m->mMaterialIndex]->Get(AI_MATKEY_NAME, n);
+                if (r == aiReturn_SUCCESS)
+                {
+                    return std::string(n.C_Str());
+                }
+                return "none";
+            };
+
             for (int i = 0; i<scene->mNumMeshes; ++i) {
                 auto mesh = scene->mMeshes[i];
                 using namespace assimp;
 
                 rtk::geometry::mesh m;
+                m.set_mat(get_mat_name(mesh));
                 m.set_vertices(read_positions(mesh));
                 m.set_faces(read_faces(mesh));
                 if (mesh->HasNormals()) {
