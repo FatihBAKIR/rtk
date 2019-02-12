@@ -1,10 +1,11 @@
-vert: "phong.vert"
-frag: "phong.frag"
-name: "Phong"
-diffuse: [1, 1, 1]
-specular: [1, 1, 1]
-ambient: [1, 1, 1]
-phong: 16
-diffuse_map: "textures/hardwood.png"
-normal_map: "textures/hardwood_normal.png"
-tex_scale: 40
+hardwood:
+  vert: "phong.vert"
+  frag: "phong.frag"
+  name: "Phong"
+  diffuse: [1, 1, 1]
+  specular: [1, 1, 1]
+  ambient: [1, 1, 1]
+  phong: 16
+  diffuse_map: "textures/hardwood.png"
+  normal_map: "textures/hardwood_normal.png"
+  tex_scale: 40

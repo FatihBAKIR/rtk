@@ -14,6 +14,7 @@ struct PhongMaterial
     float phong_exponent;
     bool textured;
     bool normaled;
+    bool specd;
 };
 
 uniform float uv_scale;

@@ -136,7 +136,7 @@ namespace rtk {
         std::vector<geometry::mesh> load_meshes(const std::string& file)
         {
             Assimp::Importer importer;
-            auto scene = importer.ReadFile(file, aiProcess_JoinIdenticalVertices);
+            auto scene = importer.ReadFile(file, aiProcess_JoinIdenticalVertices | aiProcess_FlipUVs | aiProcess_Triangulate);
             return load_meshes(scene);
         }
 

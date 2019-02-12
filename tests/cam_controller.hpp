@@ -29,5 +29,6 @@ namespace app
         float m_speed = 1;
         rtk::window* m_win;
         std::unique_ptr<rtk::camera> m_cam;
+        glm::vec2 m_cur_prev{0, 0};
     };
 }

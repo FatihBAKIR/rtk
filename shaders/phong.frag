@@ -32,6 +32,7 @@ struct PhongMaterial
     float phong_exponent;
     bool textured;
     bool normaled;
+    bool specd;
 };
 
 uniform PhongMaterial material;
@@ -45,6 +46,7 @@ uniform DirectionalLight directional_light;
 uniform vec3 camera_position;
 
 uniform sampler2D tex;
+uniform sampler2D spec;
 uniform sampler2D normal_map;
 
 vec3 get_ambient()
@@ -63,6 +65,15 @@ vec3 get_diffuse()
         return texture(tex, uv).rgb * material.diffuse;
     }
     return material.diffuse;
+}
+
+vec3 get_specular()
+{
+    if (material.specd)
+    {
+        return texture(spec, uv).rgb * material.specular;
+    }
+    return material.specular;
 }
 
 vec3 get_normal()

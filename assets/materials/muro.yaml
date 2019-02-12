@@ -1,0 +1,74 @@
+DefaultMaterial:
+  name: Phong
+  diffuse:
+    - 0.6
+    - 0.6
+    - 0.6
+  specular:
+    - 0
+    - 0
+    - 0
+  ambient:
+    - 1
+    - 1
+    - 1
+  phong: 1
+  vert: phong.vert
+  frag: phong.frag
+a_blinn2SG:
+  name: Phong
+  diffuse:
+    - 1
+    - 1
+    - 1
+  specular:
+    - 0.2
+    - 0.2
+    - 0.2
+  ambient:
+    - 1
+    - 1
+    - 1
+  diffuse_map: muro/Muro_body_dm.png
+  specular_map: muro/Muro_body_sm.png
+  normal_map: muro/Muro_body_nm.png
+  phong: 16
+  vert: phong.vert
+  frag: phong.frag
+a_blinn4SG:
+  name: Phong
+  diffuse:
+    - 1
+    - 1
+    - 1
+  specular:
+    - 0.2
+    - 0.2
+    - 0.2
+  ambient:
+    - 1
+    - 1
+    - 1
+  diffuse_map: muro/Muro_head_dm.png
+  specular_map: muro/Muro_head_sm.png
+  normal_map: muro/Muro_head_nm.png
+  phong: 16
+  vert: phong.vert
+  frag: phong.frag
+a_pasted__blinn10SG:
+  name: Phong
+  diffuse:
+    - 0.43
+    - 0.43
+    - 0.43
+  specular:
+    - 0.67
+    - 0.82
+    - 1
+  ambient:
+    - 1
+    - 1
+    - 1
+  phong: 1
+  vert: phong.vert
+  frag: phong.frag

@@ -1,0 +1,130 @@
+DefaultMaterial:
+  name: Phong
+  diffuse:
+    - 0.6
+    - 0.6
+    - 0.6
+  specular:
+    - 0
+    - 0
+    - 0
+  ambient:
+    - 0
+    - 0
+    - 0
+  vert: phong.vert
+  frag: phong.frag
+Arm:
+  name: Phong
+  diffuse:
+    - 0.64
+    - 0.64
+    - 0.64
+  specular:
+    - 0.5
+    - 0.5
+    - 0.5
+  ambient:
+    - 0
+    - 0
+    - 0
+  diffuse_map: nanosuit/arm_dif.png
+  specular_map: nanosuit/arm_showroom_spec.png
+  normal_map: nanosuit/arm_showroom_ddn.png
+  vert: phong.vert
+  frag: phong.frag
+Body:
+  name: Phong
+  diffuse:
+    - 0.64
+    - 0.64
+    - 0.64
+  specular:
+    - 0.5
+    - 0.5
+    - 0.5
+  ambient:
+    - 0
+    - 0
+    - 0
+  diffuse_map: nanosuit/body_dif.png
+  specular_map: nanosuit/body_showroom_spec.png
+  normal_map: nanosuit/body_showroom_ddn.png
+  vert: phong.vert
+  frag: phong.frag
+Glass:
+  name: Phong
+  diffuse:
+    - 0.64
+    - 0.64
+    - 0.64
+  specular:
+    - 0.5
+    - 0.5
+    - 0.5
+  ambient:
+    - 0
+    - 0
+    - 0
+  diffuse_map: nanosuit/glass_dif.png
+  normal_map: nanosuit/glass_ddn.png
+  phong: 10
+  vert: phong.vert
+  frag: phong.frag
+Hand:
+  name: Phong
+  diffuse:
+    - 0.64
+    - 0.64
+    - 0.64
+  specular:
+    - 0.5
+    - 0.5
+    - 0.5
+  ambient:
+    - 0
+    - 0
+    - 0
+  diffuse_map: nanosuit/hand_dif.png
+  specular_map: nanosuit/hand_showroom_spec.png
+  normal_map: nanosuit/hand_showroom_ddn.png
+  vert: phong.vert
+  frag: phong.frag
+Helmet:
+  name: Phong
+  diffuse:
+    - 0.64
+    - 0.64
+    - 0.64
+  specular:
+    - 0.5
+    - 0.5
+    - 0.5
+  ambient:
+    - 0
+    - 0
+    - 0
+  diffuse_map: nanosuit/helmet_diff.png
+  specular_map: nanosuit/helmet_showroom_spec.png
+  normal_map: nanosuit/helmet_showroom_ddn.png
+  vert: phong.vert
+  frag: phong.frag
+Leg:
+  name: Phong
+  diffuse:
+    - 0.64
+    - 0.64
+    - 0.64
+  specular:
+    - 0.5
+    - 0.5
+    - 0.5
+  ambient:
+    - 0
+    - 0
+    - 0
+  diffuse_map: nanosuit/leg_dif.png
+  specular_map: nanosuit/leg_showroom_spec.png
+  normal_map: nanosuit/leg_showroom_ddn.png
+  vert: phong.vert
+  frag: phong.frag

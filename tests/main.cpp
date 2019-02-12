@@ -56,6 +56,7 @@ struct phong_material : app::material
         shader->set_variable("material.phong_exponent", phong_exponent);
 
         shader->set_variable("material.textured", bool(tex));
+        shader->set_variable("material.specd", bool(spec));
         shader->set_variable("material.normaled", bool(normal_map));
 
         if (tex)
@@ -64,9 +65,15 @@ struct phong_material : app::material
             shader->set_variable("uv_scale", tex_scale);
         }
 
+        if (spec)
+        {
+            shader->set_variable("spec", 6, *spec);
+            shader->set_variable("uv_scale", tex_scale);
+        }
+
         if (normal_map)
         {
-            shader->set_variable("normal_map", 6, *normal_map);
+            shader->set_variable("normal_map", 7, *normal_map);
             shader->set_variable("uv_scale", tex_scale);
         }
 
@@ -86,6 +93,7 @@ struct phong_material : app::material
 
     std::shared_ptr<rtk::gl::texture2d> normal_map;
     std::shared_ptr<rtk::gl::texture2d> tex;
+    std::shared_ptr<rtk::gl::texture2d> spec;
     float tex_scale = 1;
 
     std::shared_ptr<rtk::gl::program> shader;
@@ -130,7 +138,14 @@ auto load_mat(const YAML::Node& mat_def)
         mat->ambient = get_vec3(mat_def["ambient"]);
         mat->specular = get_vec3(mat_def["specular"]);
         mat->diffuse = get_vec3(mat_def["diffuse"]);
-        mat->phong_exponent = mat_def["phong"].as<float>();
+        if (mat_def["phong"])
+        {
+            mat->phong_exponent = mat_def["phong"].as<float>();
+        }
+        else
+        {
+            mat->phong_exponent = 1;
+        }
 
         if (mat_def["tex_scale"])
         {
@@ -147,6 +162,11 @@ auto load_mat(const YAML::Node& mat_def)
             mat->normal_map = load_tex("../assets/" + mat_def["normal_map"].as<std::string>());
         }
 
+        if (mat_def["specular_map"])
+        {
+            mat->spec = load_tex("../assets/" + mat_def["specular_map"].as<std::string>());
+        }
+
         res = mat;
     }
 
@@ -156,23 +176,16 @@ auto load_mat(const YAML::Node& mat_def)
 auto load_mats(const std::string& path)
 {
     std::ifstream m(path);
-    auto root = YAML::Load(m);
+    YAML::Node root = YAML::Load(m);
 
     std::unordered_map<std::string, std::shared_ptr<app::material>> res;
-    for (YAML::Node mat : root)
+    for (auto mat : root)
     {
-        auto n = mat["name"].as<std::string>();
-        mat["name"] = "Phong";
-        res.emplace(n, load_mat(mat));
+        auto n = mat.first.as<std::string>();
+        res.emplace(n, load_mat(mat.second));
     }
 
     return res;
-}
-
-auto load_mat(const std::string& path)
-{
-    std::ifstream m(path);
-    return load_mat(YAML::Load(m));
 }
 
 auto get_sky()
@@ -192,7 +205,7 @@ auto get_ground(const rtk::gl::mesh& mesh)
     app::renderable ground{};
     ground.name = "ground 2";
 
-    ground.mat = load_mat("../assets/materials/hardwood.yaml");
+    ground.mat = load_mats("../assets/materials/hardwood.yaml")["hardwood"];
     ground.mesh = &mesh;
     ground.cast_shadow = false;
 
@@ -261,30 +274,26 @@ int main(int argc, char** argv) {
         gl_meshes.back().add_vertex_data<glm::vec3>(4, tans);
     }
 
-    auto& mesh = meshes[0];
+    auto& mesh = meshes[1];
     auto max = std::max({mesh.get_bbox().extent.x, mesh.get_bbox().extent.y, mesh.get_bbox().extent.z});
 
-    renderable teapot{};
-    teapot.name = "teapot";
-    teapot.mat = load_mat(argv[2]);
-    teapot.mesh = &gl_meshes[0];
+    std::vector<renderable> r;
+    auto mats = load_mats(argv[2]);
 
-    teapot.transform->set_scale(glm::vec3(1.f, 1.f, 1.f) / glm::vec3(max, max, max));
-    teapot.transform->set_position(-mesh.get_bbox().position / glm::vec3(max, max, max));
+    for (int i = 0; i < gl_meshes.size() - 2; ++i)
+    {
+        auto& headm = meshes[i];
+        renderable head{};
+        head.name = "mesh_" + std::to_string(i);
+        head.mat = mats[headm.get_mat()];
+        head.mesh = &gl_meshes[i];
 
-    auto scaled = mesh.get_bbox().extent / glm::vec3(max, max, max);
+        head.transform->set_scale(glm::vec3(1.f, 1.f, 1.f) / glm::vec3(max, max, max));
+        head.transform->set_position(-mesh.get_bbox().position / glm::vec3(max, max, max));
+        r.emplace_back(std::move(head));
+    }
 
-    renderable bounds{};
-    bounds.name = "bounds";
-    bounds.mat = load_mat("../assets/materials/bounds.yaml");
-    bounds.mesh = &gl_meshes[1];
-    bounds.wire = true;
-    bounds.cast_shadow = false;
-    bounds.transform->set_parent(teapot.transform);
-    bounds.transform->set_scale(mesh.get_bbox().extent);
-    bounds.transform->set_position(mesh.get_bbox().position);
-
-    auto ground = get_ground(gl_meshes[2]);
+    auto ground = get_ground(gl_meshes.back());
 
     area_light pl;
     pl.color = glm::vec3{ 25, 25, 25 };
@@ -292,7 +301,7 @@ int main(int argc, char** argv) {
 
     area_light pl2;
     pl2.color = glm::vec3{ 25, 25, 25 };
-    pl2.transform->set_position({ 0, 5, 3 });
+    pl2.transform->set_position({ 0, 10, 3 });
 
     area_light pl3;
     pl3.color = glm::vec3{ 25, 25, 25 };
@@ -305,18 +314,14 @@ int main(int argc, char** argv) {
     cam_controller cc{std::make_unique<rtk::camera>(w), w};
 
     scene ctx;
-    ctx.objects.push_back(teapot);
+    ctx.objects = std::move(r);
     ctx.objects.push_back(ground);
-    //ctx.objects.push_back(bounds);
-    //ctx.objects.push_back(sky);
 
     ctx.lights.push_back(pl);
     ctx.lights.push_back(pl2);
-    //ctx.lights.push_back(pl3);
-    //ctx.lights.push_back(pl4);
+
     ctx.ambient = ambient_light{ glm::vec3{ .2, .2, .2 } };
 
-    for (auto& l : ctx.lights) l.transform->look_at(teapot.transform->get_pos());
     using namespace std::chrono_literals;
     using clk = std::chrono::system_clock;
     std::chrono::microseconds dt = 10ms;
@@ -329,39 +334,40 @@ int main(int argc, char** argv) {
 
         if (w.get_key_down(GLFW_KEY_UP)){
             pl.transform->translate(rtk::vectors::forward / 50.f, rtk::space::world);
-
-            for (auto& l : ctx.lights) l.transform->look_at(teapot.transform->get_pos());
         }
 
         if (w.get_key_down(GLFW_KEY_DOWN)){
             pl.transform->translate(rtk::vectors::back / 50.f, rtk::space::world);
-
-            for (auto& l : ctx.lights) l.transform->look_at(teapot.transform->get_pos());
         }
 
         if (w.get_key_down(GLFW_KEY_LEFT)){
             pl.transform->translate(rtk::vectors::left / 50.f, rtk::space::world);
 
-            for (auto& l : ctx.lights) l.transform->look_at(teapot.transform->get_pos());
         }
 
         if (w.get_key_down(GLFW_KEY_RIGHT)){
             pl.transform->translate(rtk::vectors::right / 50.f, rtk::space::world);
-
-            for (auto& l : ctx.lights) l.transform->look_at(teapot.transform->get_pos());
         }
 
         if (w.get_key_down(GLFW_KEY_P)){
             pl.transform->translate(rtk::vectors::up / 50.f, rtk::space::world);
-
-            for (auto& l : ctx.lights) l.transform->look_at(teapot.transform->get_pos());
         }
 
         if (w.get_key_down(GLFW_KEY_L)){
             pl.transform->translate(rtk::vectors::down / 50.f, rtk::space::world);
-
-            for (auto& l : ctx.lights) l.transform->look_at(teapot.transform->get_pos());
         }
+
+        if (w.get_key_down(GLFW_KEY_EQUAL))
+        {
+            ctx.lights[0].size += 0.1f;
+        }
+        if (w.get_key_down(GLFW_KEY_MINUS))
+        {
+            ctx.lights[0].size -= 0.1f;
+        }
+        ctx.lights[0].size = std::clamp<float>(ctx.lights[0].size, 1, 10);
+
+        for (auto& l : ctx.lights) l.transform->look_at(glm::vec3(0, 0, 0));
 
         auto obj_im = object_pass(cc.get_camera(), ctx);
         auto edges = detect_edges(obj_im);
@@ -379,6 +385,18 @@ int main(int argc, char** argv) {
         w.set_viewport();
 
         cc.pre_render(dt.count() / 1'000'000.f);
+
+        ImGui::Begin("Info");
+        ImGui::PlotLines("Perf", [](void* d, int index) -> float { return (*static_cast<decltype(&fps)>(d))[index]; },
+                         &fps, fps.size(), 0, nullptr, 0, 75);
+        ImGui::End();
+
+        ImGui::Begin("Shadow map of light 3");
+        ImGui::SliderFloat("Light size", &ctx.lights[0].size, 1, 10);
+        ImGui::End();
+
+        ImGui::Render();
+
         contour(edges, out);
 
         //render(cc.get_camera(), ctx);
@@ -387,26 +405,6 @@ int main(int argc, char** argv) {
         fps.push_back(cur_fps);
         fps.pop_front();
 
-        ImGui::Begin("Info");
-        ImGui::Text("FPS: %d", cur_fps);
-        ImGui::PlotLines("Perf", [](void* d, int index) -> float { return (*static_cast<decltype(&fps)>(d))[index]; },
-                &fps, fps.size(), 0, nullptr, 0, 75);
-        ImGui::End();
-
-        ImGui::Begin("Material");
-        ImGui::ColorPicker3("Diffuse",
-                dynamic_cast<phong_material*>(teapot.mat.get())->diffuse.data.data);
-        ImGui::ColorPicker3("Specular",
-                dynamic_cast<phong_material*>(teapot.mat.get())->specular.data.data);
-        ImGui::End();
-
-        ImGui::Begin("Shadow map of light 3");
-        //ImGui::Image((void*)bet->get_id(), ImVec2{450,300});
-        //ImGui::Image((void*)out->get_id(), ImVec2{900,600});
-        ImGui::SliderFloat("Light size", &ctx.lights[0].size, 1, 10);
-        ImGui::End();
-
-        ImGui::Render();
         ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
 
         w.end_draw();

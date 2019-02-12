@@ -41,6 +41,10 @@ namespace geometry
             m_mat_name = name;
         }
 
+        const std::string& get_mat() const {
+            return m_mat_name;
+        }
+
         void set_vertices(gsl::span<const glm::vec3>);
         void set_normals(gsl::span<const glm::vec3>);
         void set_faces(gsl::span<const std::uint32_t>);

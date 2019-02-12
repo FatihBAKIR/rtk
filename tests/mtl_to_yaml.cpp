@@ -73,7 +73,7 @@ YAML::Node mat2yaml(const aiMaterial* mat)
         res["normal_map"] = nm;
 
     ai_real phong{};
-    r = mat->Get(AI_MATKEY_REFRACTI, phong);
+    r = mat->Get(AI_MATKEY_REFLECTIVITY, phong);
     if (r == aiReturn_SUCCESS)
         res["phong"] = phong;
 
@@ -93,7 +93,9 @@ int main(int argc, char** argv)
     {
         auto mat = scene->mMaterials[i];
         auto yml = mat2yaml(mat);
-        root[yml["name"].as<std::string>()] = yml;
+        auto name = yml["name"].as<std::string>();
+        yml["name"] = "Phong";
+        root[name] = yml;
     }
     std::cout << root << '\n';
 }

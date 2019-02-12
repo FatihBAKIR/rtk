@@ -122,6 +122,10 @@ namespace rtk {
 
     bool window::get_key_down(int key) const
     {
+        if (key == GLFW_MOUSE_BUTTON_LEFT || key == GLFW_MOUSE_BUTTON_RIGHT)
+        {
+            return glfwGetMouseButton(m_wnd, key) == GLFW_PRESS;
+        }
         return glfwGetKey(m_wnd, key) == GLFW_PRESS;
     }
 
