@@ -23,3 +23,6 @@ target_link_libraries(renderer_lib PUBLIC rtk imgui)
 
 add_executable(renderer tests/main.cpp)
 target_link_libraries(renderer renderer_lib yaml-cpp)
+
+add_executable(mtl2yaml tests/mtl_to_yaml.cpp)
+target_link_libraries(mtl2yaml assimp yaml-cpp)

@@ -153,6 +153,22 @@ auto load_mat(const YAML::Node& mat_def)
     return res;
 }
 
+auto load_mats(const std::string& path)
+{
+    std::ifstream m(path);
+    auto root = YAML::Load(m);
+
+    std::unordered_map<std::string, std::shared_ptr<app::material>> res;
+    for (YAML::Node mat : root)
+    {
+        auto n = mat["name"].as<std::string>();
+        mat["name"] = "Phong";
+        res.emplace(n, load_mat(mat));
+    }
+
+    return res;
+}
+
 auto load_mat(const std::string& path)
 {
     std::ifstream m(path);
