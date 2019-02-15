@@ -181,13 +181,13 @@ namespace rtk
         }
     }
 
-    void transform::look_at(const glm::vec3& to)
+    void transform::look_at(const glm::vec3& to, const glm::vec3& up, const glm::vec3& right)
     {
         using namespace glm;
         auto des = normalize(get_pos() - to);
         //auto rotation = RotationBetweenVectors(get_forward(), des);
         //set_rotation(quatLookAt(des, get_up()));
-        set_rotation(safeQuatLookAt(get_pos(), to, get_up(), get_right()));
+        set_rotation(safeQuatLookAt(get_pos(), to, up, right));
         //this->rotate(rotation, space::self);
     }
 

@@ -23,6 +23,7 @@ namespace RTK_NAMESPACE {
 
         enum class pixel_format : uint8_t
         {
+            bgr_byte,
             gray_byte,
             rgb_byte,
             rgba_byte,

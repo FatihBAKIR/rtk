@@ -99,12 +99,6 @@ struct phong_material : app::material
     std::shared_ptr<rtk::gl::program> shader;
 };
 
-std::shared_ptr<rtk::gl::texture2d> load_tex(const std::string& path, bool mipmap = true)
-{
-    auto tex = rtk::graphics::load_texture(path);
-    return std::make_shared<rtk::gl::texture2d>(tex, mipmap);
-}
-
 std::shared_ptr<rtk::gl::cubemap> load_cubemap(std::initializer_list<std::string> paths)
 {
     std::vector<rtk::graphics::texture2d> texs;
@@ -117,6 +111,12 @@ std::shared_ptr<rtk::gl::cubemap> load_cubemap(std::initializer_list<std::string
         return &x;
     });
     return std::make_shared<rtk::gl::cubemap>(faces);
+}
+
+std::shared_ptr<rtk::gl::texture2d> load_tex(const std::string& path, bool mipmap = true)
+{
+    auto tex = rtk::graphics::load_texture(path);
+    return std::make_shared<rtk::gl::texture2d>(tex, mipmap);
 }
 
 auto load_mat(const YAML::Node& mat_def)

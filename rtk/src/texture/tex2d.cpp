@@ -114,6 +114,7 @@ namespace RTK_NAMESPACE {
             using namespace graphics;
             switch (fmt)
             {
+                    case pixel_format::bgr_byte: return {GL_RGB8, GL_BGR, GL_UNSIGNED_BYTE};
             case pixel_format::gray_byte: return {GL_R8, GL_RED, GL_UNSIGNED_BYTE};
             case pixel_format::rgb_byte: return {GL_RGB8, GL_RGB, GL_UNSIGNED_BYTE};
             case pixel_format::rgba_byte: return {GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE};

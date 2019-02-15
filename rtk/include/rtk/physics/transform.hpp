@@ -57,7 +57,11 @@ namespace rtk
         glm::vec3 get_right() const;
         glm::vec3 get_pos() const;
 
-        void look_at(const glm::vec3& to);
+        void look_at(const glm::vec3& to, const glm::vec3& up, const glm::vec3& right);
+        void look_at(const glm::vec3& to)
+        {
+            look_at(to, get_up(), get_right());
+        }
 
         const glm::vec3& get_local_pos() const { return m_pos; }
         const glm::vec3& get_local_scale() const { return scale; }

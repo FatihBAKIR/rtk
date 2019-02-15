@@ -11,6 +11,8 @@
 #include <rtk/framebuffer.hpp>
 #include "shader_man.hpp"
 #include <rtk/geometry/mesh.hpp>
+#include <rtk/utility.hpp>
+#include <rtk/graphics/rect.hpp>
 
 namespace {
     std::shared_ptr<rtk::gl::program> get_shadow_shader()
@@ -41,6 +43,16 @@ namespace {
     std::shared_ptr<rtk::gl::program> get_contour_shader()
     {
         return app::load_shader("../shaders/full_tex.vert", "../shaders/contour.frag");
+    }
+
+    std::shared_ptr<rtk::gl::program> get_tex_shader()
+    {
+        return app::load_shader("../shaders/full_tex.vert", "../shaders/draw_tex.frag");
+    }
+
+    std::shared_ptr<rtk::gl::program> get_overlay_shader()
+    {
+        return app::load_shader("../shaders/full_tex.vert", "../shaders/overlay.frag");
     }
 
     std::shared_ptr<rtk::gl::program> get_depth_vis_shader()
@@ -195,6 +207,37 @@ namespace app
         return nullptr;
     }
 
+    void
+    overlay(const std::shared_ptr<rtk::gl::texture2d>& a, const std::shared_ptr<rtk::gl::texture2d>& b)
+    {
+        static auto mesh = create(rtk::geometry::primitive::quad());
+
+        static auto vis_shader = get_overlay_shader();
+
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        vis_shader->set_variable("fore", 1, *a);
+        vis_shader->set_variable("back", 2, *b);
+
+        mesh.draw(*vis_shader);
+    }
+
+    std::shared_ptr<rtk::gl::texture2d>
+    draw_tex(const std::shared_ptr<rtk::gl::texture2d>& scene)
+    {
+        static auto mesh = create(rtk::geometry::primitive::quad());
+
+        static auto vis_shader = get_tex_shader();
+
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        vis_shader->set_variable("d", 1, *scene);
+
+        mesh.draw(*vis_shader);
+
+        return nullptr;
+    }
+
     std::shared_ptr<rtk::gl::texture2d>
     object_pass(const rtk::camera& cam, const scene& ctx)
     {
@@ -306,9 +349,9 @@ namespace app
             }
         }
     };
-
     void render_one(
-            const rtk::camera& cam,
+            const glm::vec3& cp,
+            const glm::mat4& vp,
             const app::scene& ctx,
             const shadow_ctx& shadow,
             const app::renderable& obj)
@@ -316,8 +359,8 @@ namespace app
         auto mat = obj.mat.get();
         auto& shader = mat->go();
 
-        shader.set_variable("camera_position", cam.get_transform()->get_pos());
-        shader.set_variable("vp", cam.get_vp_matrix());
+        shader.set_variable("camera_position", cp);
+        shader.set_variable("vp", vp);
         shader.set_variable("model", obj.transform->get_world_mat4());
 
         int pl_num = 0;
@@ -335,7 +378,6 @@ namespace app
 
         apply(shader, ctx.ambient);
 
-        cam.activate();
         if (obj.wire)
         {
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -347,8 +389,19 @@ namespace app
         }
     }
 
+    void render_one(
+            const rtk::camera& cam,
+            const app::scene& ctx,
+            const shadow_ctx& shadow,
+            const app::renderable& obj)
+    {
+        cam.activate();
+        render_one(cam.get_transform()->get_pos(), cam.get_vp_matrix(),
+                ctx, shadow, obj);
+    }
+
     std::shared_ptr<rtk::gl::texture2d>
-            render_to_tex(const rtk::camera& cam, const app::scene& ctx)
+    render_to_tex(const glm::mat4& vp, const glm::vec3& pos, rtk::resolution sz, const app::scene& ctx)
     {
         using namespace rtk::literals;
 
@@ -364,8 +417,8 @@ namespace app
         glCullFace(GL_BACK);
 
         static auto out = rtk::gl::create_texture(
-                cam.get_resolution(),
-                rtk::graphics::pixel_format::rgb_byte);
+                sz,
+                rtk::graphics::pixel_format::rgba_byte);
 
         static rtk::gl::framebuffer shadow_buf(*out);
 
@@ -379,7 +432,7 @@ namespace app
             glBindRenderbuffer(GL_RENDERBUFFER, rboId);
 
             glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
-                                  cam.get_resolution().width, cam.get_resolution().height);
+                                  sz.width, sz.height);
             glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
             glFramebufferRenderbuffer(GL_FRAMEBUFFER,      // 1. fbo target: GL_FRAMEBUFFER
@@ -390,18 +443,25 @@ namespace app
             return rboId;
         }();
 
-        //glEnable(GL_FRAMEBUFFER_SRGB);
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClearColor(0.2f, 0.3f, 0.3f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glEnable(GL_DEPTH_TEST);
 
         for (auto& obj : ctx.objects)
         {
-            render_one(cam, ctx, shadow, obj);
+            rtk::set_viewport(rtk::screen_rect{{rtk::pixels(0), rtk::pixels(0)}, sz});
+            render_one(pos, vp, ctx, shadow, obj);
         }
 
         rtk::gl::reset_framebuffer();
 
         return out;
+    }
+
+    std::shared_ptr<rtk::gl::texture2d>
+            render_to_tex(const rtk::camera& cam, const app::scene& ctx)
+    {
+        return render_to_tex(cam.get_vp_matrix(), cam.get_transform()->get_pos(), cam.get_resolution(),
+                      ctx);
     }
 }

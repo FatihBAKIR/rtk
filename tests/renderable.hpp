@@ -21,7 +21,4 @@ namespace app
         bool wire = false;
         bool cast_shadow = true;
     };
-
-    struct scene;
-    void render(const rtk::camera& cam, const app::scene& ctx);
 }

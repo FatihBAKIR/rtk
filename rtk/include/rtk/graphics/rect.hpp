@@ -2,6 +2,8 @@
 // Created by fatih on 5/6/17.
 //
 
+#pragma once
+
 #include <rtk/graphics/size.hpp>
 
 namespace RTK_NAMESPACE
