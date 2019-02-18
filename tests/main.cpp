@@ -46,6 +46,27 @@ struct skybox_mat : app::material
     std::shared_ptr<rtk::gl::program> shader;
 };
 
+struct sphere_material : app::material
+{
+    rtk::gl::program &go() override {
+        shader->set_variable("front", 5, *front);
+        shader->set_variable("back", 6, *back);
+        shader->set_variable("overlap", overlap);
+
+        return *shader;
+    }
+
+    std::unique_ptr<material> clone() const override {
+        return nullptr;
+    }
+
+    float overlap = 0.06;
+    std::shared_ptr<rtk::gl::texture2d> front;
+    std::shared_ptr<rtk::gl::texture2d> back;
+
+    std::shared_ptr<rtk::gl::program> shader;
+};
+
 struct phong_material : app::material
 {
     rtk::gl::program& go() override
@@ -169,6 +190,16 @@ auto load_mat(const YAML::Node& mat_def)
 
         res = mat;
     }
+    else if (pname == "360map")
+    {
+        auto mat = std::make_shared<sphere_material>();
+
+        mat->shader = prog;
+        mat->front = load_tex("../assets/" + mat_def["front"].as<std::string>());
+        mat->back = load_tex("../assets/" + mat_def["back"].as<std::string>());
+
+        res = mat;
+    }
 
     return res;
 }
@@ -245,7 +276,7 @@ int main(int argc, char** argv) {
 
     rtk::rtk_init init;
 
-    rtk::window w({1440_px, 900_px});
+    rtk::window w({900_px, 900_px});
     init_imgui(w);
 
     std::cout << "loading mesh from " << argv[1] << '\n';
@@ -280,18 +311,12 @@ int main(int argc, char** argv) {
     std::vector<renderable> r;
     auto mats = load_mats(argv[2]);
 
-    for (int i = 0; i < gl_meshes.size() - 2; ++i)
-    {
-        auto& headm = meshes[i];
-        renderable head{};
-        head.name = "mesh_" + std::to_string(i);
-        head.mat = mats[headm.get_mat()];
-        head.mesh = &gl_meshes[i];
+    renderable head{};
+    head.name = "mesh";
+    head.mat = mats["tex"];
+    head.mesh = &gl_meshes[0];
 
-        head.transform->set_scale(glm::vec3(1.f, 1.f, 1.f) / glm::vec3(max, max, max));
-        head.transform->set_position(-mesh.get_bbox().position / glm::vec3(max, max, max));
-        r.emplace_back(std::move(head));
-    }
+    r.emplace_back(std::move(head));
 
     auto ground = get_ground(gl_meshes.back());
 
@@ -315,7 +340,7 @@ int main(int argc, char** argv) {
 
     scene ctx;
     ctx.objects = std::move(r);
-    ctx.objects.push_back(ground);
+    //ctx.objects.push_back(ground);
 
     ctx.lights.push_back(pl);
     ctx.lights.push_back(pl2);
@@ -326,11 +351,31 @@ int main(int argc, char** argv) {
     using clk = std::chrono::system_clock;
     std::chrono::microseconds dt = 10ms;
 
+    std::vector<glm::vec3> dirs{
+            {0, 0, 1},
+            {-1, 0, 0},
+            { 0, 0, -1},
+            { 1, 0, 0},
+            { 0, 1, 0},
+            { 0, -1, 0}
+    };
+
+    int cam_dir = 0;
+
+    auto m = static_cast<sphere_material*>(ctx.objects[0].mat.get());
     std::deque<int> fps(120, 30);
     while (!w.should_close())
     {
         auto beg = clk::now();
         ImGui_ImplGlfwGL3_NewFrame();
+
+
+        if (w.get_key_down(GLFW_KEY_SPACE))
+        {
+            cam_dir++;
+            cam_dir %= 6;
+            cc.get_trans().look_at(dirs[cam_dir]);
+        }
 
         if (w.get_key_down(GLFW_KEY_UP)){
             pl.transform->translate(rtk::vectors::forward / 50.f, rtk::space::world);
@@ -341,12 +386,11 @@ int main(int argc, char** argv) {
         }
 
         if (w.get_key_down(GLFW_KEY_LEFT)){
-            pl.transform->translate(rtk::vectors::left / 50.f, rtk::space::world);
-
+            m->overlap -= 0.0005;
         }
 
         if (w.get_key_down(GLFW_KEY_RIGHT)){
-            pl.transform->translate(rtk::vectors::right / 50.f, rtk::space::world);
+            m->overlap += 0.0005;
         }
 
         if (w.get_key_down(GLFW_KEY_P)){

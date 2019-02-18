@@ -39,7 +39,8 @@ namespace app
             : m_win{&w}, m_cam(std::move(cam))
     {
             //m_cam->get_transform()->translate(rtk::vectors::up * 1.f);
+            m_cam->set_fov(90);
             m_cur_prev = m_win->get_mouse();
-            m_cam->get_transform()->translate(rtk::vectors::back * 2.f);
+            //m_cam->get_transform()->translate(rtk::vectors::back * 2.f);
     }
 }

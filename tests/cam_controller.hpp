@@ -18,6 +18,11 @@ namespace app
             m_speed = s;
         }
 
+        rtk::transform& get_trans()
+        {
+            return *m_cam->get_transform();
+        }
+
         cam_controller(std::unique_ptr<rtk::camera> cam, rtk::window& w);
 
         rtk::camera& get_camera() const

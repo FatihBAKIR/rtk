@@ -1,0 +1,6 @@
+tex:
+  vert: "360map.vert"
+  frag: "360map.frag"
+  name: "360map"
+  front: "textures/front.png"
+  back: "textures/back.png"
