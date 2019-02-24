@@ -18,6 +18,8 @@
 #include <fstream>
 #include <deque>
 
+#include <SOIL/SOIL.h>
+
 static std::shared_ptr<rtk::gl::program> get_phong_shader()
 {
     return app::load_shader("../shaders/phong.vert", "../shaders/phong.frag");
@@ -251,6 +253,9 @@ namespace app {
     render_to_tex(const rtk::camera &cam, const scene &ctx);
 
     std::shared_ptr<rtk::gl::texture2d>
+    render_to_tex(const glm::mat4& vp, const glm::vec3& pos, rtk::resolution sz, const app::scene& ctx);
+
+    std::shared_ptr<rtk::gl::texture2d>
     geometry_pass(const rtk::camera &cam, const scene &ctx);
 
     std::shared_ptr<rtk::gl::texture2d>
@@ -266,6 +271,15 @@ namespace app {
     thicker(const std::shared_ptr<rtk::gl::texture2d>& depth);
 
     std::shared_ptr<rtk::gl::texture2d>
+    draw_tex(const std::shared_ptr<rtk::gl::texture2d>& scene);
+
+    rtk::graphics::unsafe_texture
+    read_tex(const std::shared_ptr<rtk::gl::texture2d>& scene);
+
+    std::shared_ptr<rtk::gl::texture2d>
+    draw_side_by_side(const std::vector<std::shared_ptr<rtk::gl::texture2d>>& texs);
+
+    std::shared_ptr<rtk::gl::texture2d>
     contour(const std::shared_ptr<rtk::gl::texture2d>& edges, const std::shared_ptr<rtk::gl::texture2d>& scene);
 }
 
@@ -276,7 +290,7 @@ int main(int argc, char** argv) {
 
     rtk::rtk_init init;
 
-    rtk::window w({900_px, 900_px});
+    rtk::window w({2048_px, 2048_px});
     init_imgui(w);
 
     std::cout << "loading mesh from " << argv[1] << '\n';
@@ -318,142 +332,42 @@ int main(int argc, char** argv) {
 
     r.emplace_back(std::move(head));
 
-    auto ground = get_ground(gl_meshes.back());
-
-    area_light pl;
-    pl.color = glm::vec3{ 25, 25, 25 };
-    pl.transform->set_position({ 0, 5, -3 });
-
-    area_light pl2;
-    pl2.color = glm::vec3{ 25, 25, 25 };
-    pl2.transform->set_position({ 0, 10, 3 });
-
-    area_light pl3;
-    pl3.color = glm::vec3{ 25, 25, 25 };
-    pl3.transform->set_position({ -5, 5, 0 });
-
-    area_light pl4;
-    pl4.color = glm::vec3{ 25, 25, 25 };
-    pl4.transform->set_position({ 5, 5, 0 });
-
-    cam_controller cc{std::make_unique<rtk::camera>(w), w};
-
     scene ctx;
     ctx.objects = std::move(r);
-    //ctx.objects.push_back(ground);
 
-    ctx.lights.push_back(pl);
-    ctx.lights.push_back(pl2);
-
-    ctx.ambient = ambient_light{ glm::vec3{ .2, .2, .2 } };
-
-    using namespace std::chrono_literals;
-    using clk = std::chrono::system_clock;
-    std::chrono::microseconds dt = 10ms;
-
-    std::vector<glm::vec3> dirs{
-            {0, 0, 1},
-            {-1, 0, 0},
-            { 0, 0, -1},
-            { 1, 0, 0},
-            { 0, 1, 0},
-            { 0, -1, 0}
+    std::vector<std::pair<glm::vec3, glm::vec3>> dirs{
+            {{0, 0, 1}, {0, 1, 0}},
+            {{-1, 0, 0}, { 0, 1, 0 }},
+            {{ 0, 0, -1}, { 0, 1, 0}},
+            {{ 1, 0, 0}, { 0, 1, 0 }},
+            {{ 0, 1, 0}, { 0, 0, -1}},
+            {{ 0, -1, 0} , {0, 0, 1}}
     };
 
     int cam_dir = 0;
 
+    auto proj = glm::perspective<float>(glm::radians(90.f), 1, 0.1, 100);
+
     auto m = static_cast<sphere_material*>(ctx.objects[0].mat.get());
     std::deque<int> fps(120, 30);
-    while (!w.should_close())
+
+    auto vp = proj * glm::lookAt(glm::vec3{0, 0, 0}, {0, 0, 1}, {0, 1, 0});
+
+    std::vector<std::shared_ptr<rtk::gl::texture2d>> texs;
+
+    int x = 0;
+    for (auto& [fwd, up] : dirs) {
+        auto lookat = glm::lookAt({0, 0, 0}, fwd, up);
+        vp = proj * lookat;
+
+        auto out = render_to_tex(vp, {0, 0, 0}, {rtk::pixels(1024), rtk::pixels(1024)}, ctx);
+        texs.push_back(std::move(out));
+    }
+
+    for (auto& tex : texs)
     {
-        auto beg = clk::now();
-        ImGui_ImplGlfwGL3_NewFrame();
-
-
-        if (w.get_key_down(GLFW_KEY_SPACE))
-        {
-            cam_dir++;
-            cam_dir %= 6;
-            cc.get_trans().look_at(dirs[cam_dir]);
-        }
-
-        if (w.get_key_down(GLFW_KEY_UP)){
-            pl.transform->translate(rtk::vectors::forward / 50.f, rtk::space::world);
-        }
-
-        if (w.get_key_down(GLFW_KEY_DOWN)){
-            pl.transform->translate(rtk::vectors::back / 50.f, rtk::space::world);
-        }
-
-        if (w.get_key_down(GLFW_KEY_LEFT)){
-            m->overlap -= 0.0005;
-        }
-
-        if (w.get_key_down(GLFW_KEY_RIGHT)){
-            m->overlap += 0.0005;
-        }
-
-        if (w.get_key_down(GLFW_KEY_P)){
-            pl.transform->translate(rtk::vectors::up / 50.f, rtk::space::world);
-        }
-
-        if (w.get_key_down(GLFW_KEY_L)){
-            pl.transform->translate(rtk::vectors::down / 50.f, rtk::space::world);
-        }
-
-        if (w.get_key_down(GLFW_KEY_EQUAL))
-        {
-            ctx.lights[0].size += 0.1f;
-        }
-        if (w.get_key_down(GLFW_KEY_MINUS))
-        {
-            ctx.lights[0].size -= 0.1f;
-        }
-        ctx.lights[0].size = std::clamp<float>(ctx.lights[0].size, 1, 10);
-
-        for (auto& l : ctx.lights) l.transform->look_at(glm::vec3(0, 0, 0));
-
-        auto obj_im = object_pass(cc.get_camera(), ctx);
-        auto edges = detect_edges(obj_im);
-        //auto thicker = app::thicker(edges);
-        //auto thicker2 = app::thicker(thicker);
-        //auto thicker3 = app::thicker(thicker2);
-        //auto obj_v = visualize_depth(thicker3);
-
-        auto out = render_to_tex(cc.get_camera(), ctx);
-
-        //auto im = geometry_pass(cc.get_camera(), ctx);
-        //auto bet = visualize_depth(im);
-
-        w.begin_draw();
-        w.set_viewport();
-
-        cc.pre_render(dt.count() / 1'000'000.f);
-
-        ImGui::Begin("Info");
-        ImGui::PlotLines("Perf", [](void* d, int index) -> float { return (*static_cast<decltype(&fps)>(d))[index]; },
-                         &fps, fps.size(), 0, nullptr, 0, 75);
-        ImGui::End();
-
-        ImGui::Begin("Shadow map of light 3");
-        ImGui::SliderFloat("Light size", &ctx.lights[0].size, 1, 10);
-        ImGui::End();
-
-        ImGui::Render();
-
-        contour(edges, out);
-
-        //render(cc.get_camera(), ctx);
-
-        auto cur_fps = int(1000 / (dt.count() / 1'000.f));
-        fps.push_back(cur_fps);
-        fps.pop_front();
-
-        ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
-
-        w.end_draw();
-
-        auto dur = std::chrono::duration_cast<std::chrono::microseconds>(clk::now() - beg);
-        dt = dur;
+        auto foo = read_tex(tex);
+        SOIL_save_image((std::to_string(++x) + "foo.bmp").c_str(),
+        SOIL_SAVE_TYPE_BMP, foo.m_width, foo.m_height, 4, (const unsigned char *) foo.m_data);
     }
 }

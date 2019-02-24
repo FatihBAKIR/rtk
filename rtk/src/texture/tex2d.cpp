@@ -222,6 +222,18 @@ namespace RTK_NAMESPACE {
             return res;
         }
 
+        graphics::unsafe_texture read_color(const texture2d & tex) {
+            graphics::unsafe_texture t;
+            t.m_width = tex.get_resolution().width;
+            t.m_height = tex.get_resolution().height;
+            t.m_data = new uint8_t[4 * t.m_height * t.m_width];
+            t.m_fmt = graphics::pixel_format::rgba_byte;
+            tex.activate(0);
+            auto gl_t = to_gl_type(t.m_fmt);
+            glReadPixels(0, 0, t.m_width, t.m_height, gl_t.format, gl_t.type, t.m_data);
+            return t;
+        }
+
         graphics::unsafe_texture read_depth(const texture2d & tex) {
             graphics::unsafe_texture t;
             t.m_width = tex.get_resolution().width;

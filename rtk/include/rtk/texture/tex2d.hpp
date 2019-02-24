@@ -127,6 +127,7 @@ namespace RTK_NAMESPACE {
             friend std::shared_ptr<texture2d> create_texture(rtk::resolution, graphics::pixel_format);
             friend class framebuffer;
             friend RTK_PUBLIC graphics::unsafe_texture read_depth(const texture2d&);
+            friend RTK_PUBLIC graphics::unsafe_texture read_color(const texture2d&);
 
         public:
             texture2d() = default;

@@ -222,6 +222,73 @@ namespace app
         mesh.draw(*vis_shader);
     }
 
+    rtk::graphics::unsafe_texture
+    read_tex(const std::shared_ptr<rtk::gl::texture2d>& scene)
+    {
+        rtk::gl::reset_framebuffer();
+        using namespace rtk::literals;
+
+        static auto out = rtk::gl::create_texture(
+                scene->get_resolution(),
+                rtk::graphics::pixel_format::rgb_byte);
+
+        static rtk::gl::framebuffer shadow_buf(*out);
+        shadow_buf.activate();
+
+        static auto mesh = create(rtk::geometry::primitive::quad());
+
+        static auto vis_shader = get_tex_shader();
+
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        vis_shader->set_variable("d", 1, *scene);
+
+        mesh.draw(*vis_shader);
+
+        auto x = read_color(*out);
+
+        rtk::gl::reset_framebuffer();
+        return x;
+    }
+
+    std::shared_ptr<rtk::gl::texture2d>
+    draw_side_by_side(const std::vector<std::shared_ptr<rtk::gl::texture2d>>& texs)
+    {
+        rtk::gl::reset_framebuffer();
+        using namespace rtk::literals;
+
+        auto res = texs[0]->get_resolution();
+        auto w = res.width;
+        res.width *= texs.size();
+        auto out = rtk::gl::create_texture(
+                res,
+                rtk::graphics::pixel_format::rgb_byte);
+
+        rtk::gl::framebuffer shadow_buf(*out);
+        shadow_buf.activate();
+
+        static auto mesh = create(rtk::geometry::primitive::quad());
+
+        static auto vis_shader = get_tex_shader();
+
+        glClear(GL_COLOR_BUFFER_BIT);
+        int vp[2];
+        glGetIntegerv(GL_MAX_VIEWPORT_DIMS, vp);
+
+        int i = 0;
+        for (auto& tex : texs)
+        {
+            glViewport(0, 0, 1024, res.height.t);
+
+            //vis_shader->set_variable("flip_y", true);
+            vis_shader->set_variable("d", 1, *tex);
+            mesh.draw(*vis_shader);
+        }
+
+        rtk::gl::reset_framebuffer();
+        return out;
+    }
+
     std::shared_ptr<rtk::gl::texture2d>
     draw_tex(const std::shared_ptr<rtk::gl::texture2d>& scene)
     {
@@ -401,7 +468,11 @@ namespace app
     }
 
     std::shared_ptr<rtk::gl::texture2d>
-    render_to_tex(const glm::mat4& vp, const glm::vec3& pos, rtk::resolution sz, const app::scene& ctx)
+    render_to_tex(
+            const glm::mat4& vp,
+            const glm::vec3& pos,
+            rtk::resolution sz,
+            const app::scene& ctx)
     {
         using namespace rtk::literals;
 
@@ -416,32 +487,28 @@ namespace app
         }
         glCullFace(GL_BACK);
 
-        static auto out = rtk::gl::create_texture(
+        auto out = rtk::gl::create_texture(
                 sz,
                 rtk::graphics::pixel_format::rgba_byte);
 
-        static rtk::gl::framebuffer shadow_buf(*out);
+        rtk::gl::framebuffer shadow_buf(*out);
 
         shadow_buf.activate_raw();
 
-        static auto rboId = [&] {
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, out->get_id(), 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, out->get_id(), 0);
 
-            GLuint rboId;
-            glGenRenderbuffers(1, &rboId);
-            glBindRenderbuffer(GL_RENDERBUFFER, rboId);
+        GLuint rboId;
+        glGenRenderbuffers(1, &rboId);
+        glBindRenderbuffer(GL_RENDERBUFFER, rboId);
 
-            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
-                                  sz.width, sz.height);
-            glBindRenderbuffer(GL_RENDERBUFFER, 0);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
+                              sz.width, sz.height);
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-            glFramebufferRenderbuffer(GL_FRAMEBUFFER,      // 1. fbo target: GL_FRAMEBUFFER
-                                      GL_DEPTH_ATTACHMENT, // 2. attachment point
-                                      GL_RENDERBUFFER,     // 3. rbo target: GL_RENDERBUFFER
-                                      rboId);              // 4. rbo ID
-
-            return rboId;
-        }();
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER,      // 1. fbo target: GL_FRAMEBUFFER
+                                  GL_DEPTH_ATTACHMENT, // 2. attachment point
+                                  GL_RENDERBUFFER,     // 3. rbo target: GL_RENDERBUFFER
+                                  rboId);              // 4. rbo ID
 
         glClearColor(0.2f, 0.3f, 0.3f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -454,6 +521,7 @@ namespace app
         }
 
         rtk::gl::reset_framebuffer();
+        glDeleteRenderbuffers(1, &rboId);
 
         return out;
     }

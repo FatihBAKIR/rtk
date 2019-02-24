@@ -63,6 +63,11 @@ namespace rtk
             look_at(to, get_up(), get_right());
         }
 
+        void look_at(const glm::vec3& to, const glm::vec3& up)
+        {
+            look_at(to, get_up(), -glm::cross(to, up));
+        }
+
         const glm::vec3& get_local_pos() const { return m_pos; }
         const glm::vec3& get_local_scale() const { return scale; }
         const glm::quat& get_local_rot() const { return rot; }
